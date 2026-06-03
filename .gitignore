@@ -1,0 +1,43 @@
+.DS_Store
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+.plot_venv/
+
+# Experiment data and generated outputs
+analysis/
+data/
+docs/
+results/
+remote_plots/
+scratch_rerun/
+*.log
+*.out
+*.err
+
+# Large local artifacts
+*.npy
+*.npz
+*.parquet
+*.csv
+*.csv.gz
+*.jsonl
+*.jsonl.gz
+*.json.gz
+*.pkl
+*.pickle
+
+# Non-Python workflow helpers intentionally left out of this code-only repo
+scripts/*.slurm
+scripts/*.sh
+scripts/README_*.md
+vendor/
