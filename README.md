@@ -18,8 +18,7 @@ peer graph.
 1. Every peer starts with at most `max_neighbors` outgoing connections. The simulator
   bootstraps these connections randomly from the known peer population.
 2. Each peer owns a local set of document embeddings. Depending on the scenario, this
-  inventory starts empty, starts with the peer's future clicked documents, or is capped
-   with FIFO eviction.
+  inventory starts empty or starts with the peer's future clicked documents.
 3. A query event starts at the querier peer. The target document is the event's clicked
   or positive item, but the querier's own local copy is never allowed to count as a
    distributed success.
@@ -30,24 +29,23 @@ peer graph.
    `max_cycles` is reached.
 6. In adaptive topology mode, the querier adds a directed connection to the successful
   peer. If the target was not found, it can connect to the best-known referred peer.
-7. After the search attempt, the querier acquires the clicked document for future events.
+7. In single-target runs, a successful retrieval records the clicked document on the
+  querier for future events. In seeded-inventory runs the querier may already hold that
+  document, and multi-relevant runs do not use this spreading step.
 
 This creates a feedback loop: successful or near-successful retrievals reshape the
-querier's neighborhood, and future peers can route semantically similar queries toward
-peers that previously acquired relevant documents.
+querier's neighborhood, and successful single-target retrievals can update querier
+ownership for later routing.
 
 ## Peer State
 
-Each `Peer` stores four local structures:
+Relevant `Peer` state includes:
 
-- `connections`: a bounded FIFO deque of outgoing peer IDs. `max_neighbors` defaults to
-`60`. New adaptive connections evict the oldest connection when the deque is full.
+- `connections`: a bounded list of outgoing peer IDs. `max_neighbors` defaults to
+`60`. New adaptive connections evict the oldest connection when the list is full.
 - `owned_docs`: the peer's current local document inventory. Each document also appears
 in a compact `DocumentCatalog` matrix so nearest-owned-document referrals can be
 computed with vector dot products.
-- `fifo_order`: insertion/refresh order for bounded-inventory scenarios. When
-`max_owned_docs > 0`, adding a new document beyond the cap evicts the oldest local
-document.
 - `routed_queries`: optional semantic query memory. Entries store a compact query
 embedding index, the original querier, and the clicked document. The default cap is
 `max_routed_queries=1000`.
@@ -78,10 +76,10 @@ query embedding to query embeddings stored in its `routed_queries` memory. If a 
 query is above `similarity_threshold` (default `0.5`), the peer emits a `routed_query`
 referral to the original querier of that earlier event.
 
-That referral is useful because the original querier acquired the clicked document after
-the earlier search attempt. In other words, routed-query memory remembers where similar
-demand previously ended up, not just where similar replicas were already visible through
-the current neighborhood.
+That referral is useful because it remembers where similar demand previously
+originated. In single-target runs, that peer may also have recorded the clicked document
+after a successful search, so the memory can point later searches toward useful peers
+that are not already visible through the current neighborhood.
 
 Replica and routed-query referrals are merged by peer ID. If multiple referrals target
 the same peer, the highest-similarity one wins. The response is sorted by similarity and
@@ -125,7 +123,7 @@ runs start from the same bootstrap graph.
 
 ## Inventory Scenarios
 
-The method is evaluated under several ownership regimes:
+The paper-facing experiments use several ownership regimes:
 
 - `empty_start_chronological`: peers start empty and acquire clicked documents over the
 real chronological event stream. If the querier already holds the target, the event is
@@ -134,13 +132,8 @@ skipped as `local_held`.
 eventually click in the trace. This is an oracle-style inventory ablation.
 - `seeded_randomized_timeline`: peers use the same seeded inventory as
 `seeded_fixed_inventory`, but events are consumed in randomized order.
-- `fifo_chronological`: peers start empty and acquire documents chronologically, but keep
-at most `max_owned_docs` local documents. Re-clicking a held document refreshes its FIFO
-position and skips routing as `local_held`.
 - `empty_start_randomized_timeline`: peers start empty and consume the randomized event
 stream with runtime searchability checks.
-- `fifo_randomized_timeline`: peers combine randomized event order with FIFO-bounded
-ownership.
 
 For runtime-searchable scenarios, an event is routable only if some peer other than the
 querier currently owns the target document. For sidecar-searchable scenarios, routability
@@ -151,14 +144,13 @@ retrieval success.
 
 ## Datasets
 
-The simulator currently supports:
+The paper-facing experiments use:
 
 - `aol`: chronological AOL query/click events.
 - `amazon`: real user-item purchases/reviews + synthetic generated queries + UCSD
 metadata joined by `asin`. Amazon has no real timestamps, so only non-chronological
 scenarios are supported. On Amazon, `seeded_fixed_inventory` is canonicalized to
 `seeded_randomized_timeline`.
-- `mind`: news recommendation events using the same simulator-facing event shape.
 
 Dataset paths are resolved by `src.data_root.resolve_dataset_dir`. Embeddings are loaded
 through a manifest produced by `compute_embeddings.py`.
@@ -179,11 +171,11 @@ global random-peer probe ablation.
 - `--referrals-per-response` bounds each peer response.
 - `--similarity-threshold` filters routed-query memory referrals.
 - `--max-routed-queries` bounds per-peer routed-query memory.
-- `--max-owned-docs` bounds local inventory in FIFO scenarios.
 - `--random-seed` controls random bootstrap connections and randomized choices.
 
-Each run writes `run_manifest.json`, `query_log.jsonl`, and `metrics.json` to the output
-directory. The main metrics are recall, average cycles, skip rate, and skip reasons.
+Each run writes `run_manifest.json` and `metrics.json` to the output directory. In full
+query-log mode, it also writes `query_log.jsonl`. The main metrics are recall, average
+cycles, skip rate, and skip reasons.
 
 ## Minimal Local Command
 
