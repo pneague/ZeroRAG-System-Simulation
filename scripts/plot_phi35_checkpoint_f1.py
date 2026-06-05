@@ -6,11 +6,18 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-DEFAULT_SCRATCH = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT")
+from src.path_defaults import default_scratch_root  # noqa: E402
+
+
+DEFAULT_SCRATCH = default_scratch_root()
 DEFAULT_DATASET_DIR = DEFAULT_SCRATCH / "data/pubmedqa_phi35_top5_checkpoints_q30_4x5k"
 DEFAULT_OUTPUT_DIR = DEFAULT_SCRATCH / "results/pubmedqa_phi35_top5_checkpoints_q30_4x5k"
 

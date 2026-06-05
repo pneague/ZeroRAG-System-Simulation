@@ -146,18 +146,20 @@ def _method_from_manifest(manifest: dict, run_dir: Path) -> str:
     )
     if selection_mode == "random_walk":
         return "random_walk"
-    return "low_coord"
+    if algorithm == "ZeroRAG" or algorithm == "zerorag" or "zerorag" in run_dir.name:
+        return "zerorag"
+    return "zerorag"
 
 
 def _default_label(record: RunRecord) -> str:
-    if record.method == "low_coord":
+    if record.method == "zerorag":
         if record.routing_mode == "replica_only":
             return "Replica-only"
         if record.topology_mode == "static_initial_connections":
             return "Static topology"
         if record.search_mode == "fanout":
-            return f"LowCoord fanout={record.fanout}"
-        return "LowCoord"
+            return f"ZeroRAG fanout={record.fanout}"
+        return "ZeroRAG"
     if record.method == "lsh":
         lsh_config = record.manifest.get("lsh_config") or record.manifest.get("config") or {}
         bits = []
@@ -432,11 +434,11 @@ def _select_best(records: Iterable[RunRecord]) -> RunRecord | None:
     )
 
 
-def _lowcoord_records(records: Iterable[RunRecord]) -> list[RunRecord]:
+def _zerorag_records(records: Iterable[RunRecord]) -> list[RunRecord]:
     return [
         record
         for record in records
-        if record.method == "low_coord"
+        if record.method == "zerorag"
         and record.routing_mode == "semantic_query_memory"
         and record.selection_mode == "similarity"
         and record.search_mode == "best_first"
@@ -518,7 +520,7 @@ def _find_primary_record(
         for record in records
         if record.dataset == dataset and record.scenario == scenario and record.method == method
     ]
-    if method == "low_coord":
+    if method == "zerorag":
         pool = [
             record
             for record in pool
@@ -543,7 +545,7 @@ def generate_primary_plots(
     results: list[PlotResult] = []
     for dataset in datasets:
         for scenario in scenarios:
-            requested_methods = ["low_coord", "lsh", "random_walk"]
+            requested_methods = ["zerorag", "lsh", "random_walk"]
             notes: list[str] = []
             if scenario == "seeded_randomized_timeline":
                 requested_methods.append("semantica")
@@ -671,12 +673,12 @@ def _ablation_records(records: list[RunRecord], ablation: str) -> list[tuple[str
         pool = [
             record
             for record in records
-            if record.method == "low_coord"
+            if record.method == "zerorag"
             and record.routing_mode == "semantic_query_memory"
             and record.selection_mode == "similarity"
         ]
     else:
-        pool = _lowcoord_records(records)
+        pool = _zerorag_records(records)
     for record in pool:
         value = _ablation_value(record, ablation)
         if not value:
@@ -778,7 +780,7 @@ def _plot_concept_drift(
 ) -> PlotResult:
     candidates = [
         record
-        for record in _lowcoord_records(records)
+        for record in _zerorag_records(records)
         if "concept_drift" in record.run_dir.name or record.manifest.get("topic_metadata")
     ]
     record = _select_best(candidates)
@@ -858,7 +860,7 @@ def generate_ablation_plots(
             base_predicate = (
                 lambda record, dataset=dataset, scenario=scenario: record.dataset == dataset
                 and record.scenario == scenario
-                and record.method == "low_coord"
+                and record.method == "zerorag"
                 and record.routing_mode == "semantic_query_memory"
                 and record.topology_mode == "forming_new_connections"
                 and record.selection_mode == "similarity"
@@ -867,7 +869,7 @@ def generate_ablation_plots(
             replica_predicate = (
                 lambda record, dataset=dataset, scenario=scenario: record.dataset == dataset
                 and record.scenario == scenario
-                and record.method == "low_coord"
+                and record.method == "zerorag"
                 and record.routing_mode == "replica_only"
                 and record.topology_mode == "forming_new_connections"
                 and record.selection_mode == "similarity"
@@ -876,7 +878,7 @@ def generate_ablation_plots(
             static_predicate = (
                 lambda record, dataset=dataset, scenario=scenario: record.dataset == dataset
                 and record.scenario == scenario
-                and record.method == "low_coord"
+                and record.method == "zerorag"
                 and record.routing_mode == "semantic_query_memory"
                 and record.topology_mode == "static_initial_connections"
                 and record.selection_mode == "similarity"
@@ -887,10 +889,10 @@ def generate_ablation_plots(
                     records,
                     output_dir=output_dir,
                     name=f"ablation_{dataset}_{scenario}_replica_only",
-                    title=f"{dataset}: {scenario} LowCoord vs replica-only",
+                    title=f"{dataset}: {scenario} ZeroRAG vs replica-only",
                     window_size=window_size,
                     candidates=[
-                        ("LowCoord", base_predicate),
+                        ("ZeroRAG", base_predicate),
                         ("Replica-only", replica_predicate),
                     ],
                 )
@@ -900,7 +902,7 @@ def generate_ablation_plots(
                     records,
                     output_dir=output_dir,
                     name=f"ablation_{dataset}_{scenario}_static_topology",
-                    title=f"{dataset}: {scenario} LowCoord vs static topology",
+                    title=f"{dataset}: {scenario} ZeroRAG vs static topology",
                     window_size=window_size,
                     candidates=[
                         ("Forming topology", base_predicate),

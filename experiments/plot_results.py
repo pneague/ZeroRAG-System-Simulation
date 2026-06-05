@@ -11,7 +11,7 @@ from pathlib import Path
 
 def main() -> None:
     default_output_root = Path(
-        os.environ.get("LOW_COORD_DHT_OUTPUT_DIR", Path("results") / "low_coord_semantic_dht")
+        os.environ.get("LOW_COORD_DHT_OUTPUT_DIR", Path("results") / "zerorag_semantic_dht")
     )
     parser = argparse.ArgumentParser(description="Plot Low_Coord_Semantic_DHT metrics")
     parser.add_argument(
@@ -89,4 +89,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

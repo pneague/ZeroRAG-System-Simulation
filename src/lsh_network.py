@@ -10,7 +10,7 @@ ids.
 The hash family math lives in :mod:`src.lsh`; this module only handles
 peer state, bucket ownership, doc publication and query resolution. Data
 classes and skip-reason wording are kept aligned with
-:class:`src.network.LowCoordSemanticDHTNetwork` so the resulting
+:class:`src.network.ZeroRAGNetwork` so the resulting
 ``query_log.jsonl`` and ``metrics.json`` are plot-compatible with the
 semantic baseline.
 """
@@ -208,7 +208,7 @@ class LSHDHTNetwork:
         manifest_path: str | Path,
         config: LSHSimulationConfig,
     ) -> "LSHDHTNetwork":
-        """Mirror :meth:`LowCoordSemanticDHTNetwork.from_embedding_manifest`.
+        """Mirror :meth:`ZeroRAGNetwork.from_embedding_manifest`.
 
         Reuses :class:`EmbeddingLookup` from :mod:`src.network` so the LSH
         baseline reads the exact same memmapped embedding files as the
@@ -338,7 +338,7 @@ class LSHDHTNetwork:
         self.coord.bucket_count_distinct = len(self.buckets)
 
     def _store_clicked_doc(self, peer_id: int, doc_id: str) -> None:
-        """Mirror :meth:`LowCoordSemanticDHTNetwork._store_clicked_doc`.
+        """Mirror :meth:`ZeroRAGNetwork._store_clicked_doc`.
 
         Adds the doc to the peer (with FIFO eviction if capped), publishes
         it into L LSH tables, and withdraws any evicted doc from its
@@ -572,14 +572,14 @@ class LSHDHTNetwork:
         )
 
     # ------------------------------------------------------------------
-    # Event loop (mirrors LowCoordSemanticDHTNetwork.process_event)
+    # Event loop (mirrors ZeroRAGNetwork.process_event)
     # ------------------------------------------------------------------
 
     def process_event(self, event: QueryEvent, metrics: MetricsTracker) -> None:
         """Apply the same skip-reason and FIFO-refresh rules as semantic.
 
         The branching here is intentionally a near-copy of
-        :meth:`src.network.LowCoordSemanticDHTNetwork.process_event` so the
+        :meth:`src.network.ZeroRAGNetwork.process_event` so the
         ``skipped_by_reason`` distributions of the two algorithms are
         directly comparable.
         """

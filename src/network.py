@@ -51,6 +51,7 @@ class SimulationConfig:
     profile_search: bool = False
     churn_mode: str = "none"
     retrieval_mode: str = "single_target"
+    external_acquisition_probability: float = 0.0
     relevant_doc_ids_by_qid: dict[int, frozenset[str]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -72,6 +73,8 @@ class SimulationConfig:
             raise ValueError(f"Unsupported churn_mode={self.churn_mode!r}")
         if self.retrieval_mode not in {"single_target", "multi_relevant"}:
             raise ValueError(f"Unsupported retrieval_mode={self.retrieval_mode!r}")
+        if not 0.0 <= self.external_acquisition_probability <= 1.0:
+            raise ValueError("external_acquisition_probability must be between 0 and 1")
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,7 +126,7 @@ class EmbeddingLookup:
         return key in self.index
 
 
-class LowCoordSemanticDHTNetwork:
+class ZeroRAGNetwork:
     PROGRESS_LOG_INTERVAL = 5_000
 
     def __init__(
@@ -199,7 +202,8 @@ class LowCoordSemanticDHTNetwork:
         manifest_path: str | Path,
         config: SimulationConfig,
         load_query_embeddings_into_memory: bool = False,
-    ) -> "LowCoordSemanticDHTNetwork":
+        load_doc_embeddings_into_memory: bool = False,
+    ) -> "ZeroRAGNetwork":
         manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
         query_lookup = EmbeddingLookup(
             keys_path=manifest["query_keys_path"],
@@ -209,6 +213,7 @@ class LowCoordSemanticDHTNetwork:
         doc_lookup = EmbeddingLookup(
             keys_path=manifest["doc_keys_path"],
             embeddings_path=manifest["doc_embeddings_path"],
+            load_into_memory=load_doc_embeddings_into_memory,
         )
         return cls(
             peer_ids=peer_ids,
@@ -822,3 +827,6 @@ class LowCoordSemanticDHTNetwork:
             # Successful retrieval is the only path by which a queried doc spreads.
             self._store_clicked_doc(event.user_id, event.clicked_doc_id)
 
+
+# Backward-compatible import name for existing Slurm scripts, tests, and notebooks.
+LowCoordSemanticDHTNetwork = ZeroRAGNetwork

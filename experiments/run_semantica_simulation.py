@@ -49,10 +49,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.path_defaults import default_experiments_registry  # noqa: E402
 
-DEFAULT_EXPERIMENTS_REGISTRY = (
-    "/var/scratch/pmneague/Low_Coord_Semantic_DHT/experiments_registry.json"
-)
+DEFAULT_EXPERIMENTS_REGISTRY = str(default_experiments_registry())
 REGISTRY_SCHEMA_VERSION = 1
 ALGORITHM_NAME = "semantica_chain"
 ALLOWED_SCENARIOS: frozenset[str] = frozenset(

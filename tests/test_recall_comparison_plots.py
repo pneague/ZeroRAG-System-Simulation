@@ -101,11 +101,11 @@ class RunDiscoveryTests(unittest.TestCase):
 
         self.assertEqual(
             sorted(record.method for record in records),
-            ["low_coord", "lsh", "random_walk", "semantica"],
+            ["lsh", "random_walk", "semantica", "zerorag"],
         )
-        lowcoord = next(record for record in records if record.method == "low_coord")
-        self.assertEqual(lowcoord.selection_mode, "similarity")
-        self.assertEqual(lowcoord.search_mode, "best_first")
+        zerorag = next(record for record in records if record.method == "zerorag")
+        self.assertEqual(zerorag.selection_mode, "similarity")
+        self.assertEqual(zerorag.search_mode, "best_first")
 
     def test_primary_plot_reports_missing_runs_without_creating_empty_plot(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

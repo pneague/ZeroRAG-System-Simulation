@@ -5,13 +5,24 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-DEFAULT_REMOTE_HOST = "pmneague@fs3.das6.tudelft.nl"
-DEFAULT_REMOTE_ROOT = "/home/pmneague/DecentANN_remote/Low_Coord_Semantic_DHT"
-DEFAULT_REMOTE_SCRATCH = "/var/scratch/pmneague/Low_Coord_Semantic_DHT"
+from src.path_defaults import (  # noqa: E402
+    default_remote_host,
+    default_remote_root,
+    default_remote_scratch,
+)
+
+
+DEFAULT_REMOTE_HOST = default_remote_host()
+DEFAULT_REMOTE_ROOT = default_remote_root()
+DEFAULT_REMOTE_SCRATCH = default_remote_scratch()
 
 
 def _run(command: list[str]) -> None:

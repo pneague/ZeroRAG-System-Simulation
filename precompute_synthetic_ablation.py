@@ -13,6 +13,7 @@ from typing import Iterable
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from precompute_synthetic import precompute_synthetic_artifacts
+from src.path_defaults import default_data_root
 from src.synthetic_dataset import (
     DEFAULT_DIRICHLET_ALPHA,
     DEFAULT_DOCS_PER_TOPIC,
@@ -26,7 +27,7 @@ from src.synthetic_dataset import (
 
 
 DEFAULT_ABLATION_SIGMA = 0.05
-DEFAULT_DATA_ROOT = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/data")
+DEFAULT_DATA_ROOT = default_data_root()
 BASELINE_USERS = DEFAULT_USER_COUNT
 ABLATION_QUERIES_PER_USER = DEFAULT_QUERIES_PER_USER
 USER_SCALABILITY_USERS = (100, 500, 1_000, 5_000, 10_000, 50_000, 100_000)

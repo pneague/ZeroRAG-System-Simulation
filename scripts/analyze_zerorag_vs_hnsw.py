@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Estimate Low-Coord comparison work and compare it with a dataset-level HNSW.
+"""Estimate ZeroRAG comparison work and compare it with a dataset-level HNSW.
 
-The Low-Coord simulator records hops/cycles, not the number of document vectors
+The ZeroRAG simulator records hops/cycles, not the number of document vectors
 scored while producing referrals. This script keeps that estimate separate from
 the original result artifacts and adds one HNSW sweep per dataset. HNSW is a
 plain dataset-level ANN baseline: it indexes every document that appears in the
@@ -35,10 +35,11 @@ from experiments.run_simulation import (  # noqa: E402
     _default_searchable_queries_path_for_scenario,
 )
 from src.dataset import QueryEvent, iter_query_events  # noqa: E402
+from src.path_defaults import default_results_root  # noqa: E402
 from src.scenarios import SEEDED_SCENARIOS  # noqa: E402
 
 
-DEFAULT_RESULTS_ROOT = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/results")
+DEFAULT_RESULTS_ROOT = default_results_root()
 DEFAULT_OUTPUT_DIRNAME = "hnsw_comparison_analysis"
 HNSW_SCENARIO = "seeded_randomized_timeline"
 DEFAULT_EF_SEARCH_VALUES = (8, 16, 32, 64, 128, 256, 512, 1024)
@@ -54,7 +55,7 @@ class ResultPaths:
 
 
 @dataclass(frozen=True, slots=True)
-class LowCoordRun:
+class ZeroRAGRun:
     run_dir: Path
     dataset: str
     amazon_category: str | None
@@ -89,8 +90,8 @@ class OwnershipEstimate:
 
 
 @dataclass(frozen=True, slots=True)
-class LowCoordEstimate:
-    run: LowCoordRun
+class ZeroRAGEstimate:
+    run: ZeroRAGRun
     ownership: OwnershipEstimate
     scanned_neighbors_per_cycle: float
     estimated_doc_comparisons_per_query: float
@@ -153,8 +154,8 @@ def _find_result_paths(results_root: Path, *, include_smoke: bool) -> list[Resul
     return result_paths
 
 
-def _load_lowcoord_runs(results_root: Path, *, include_smoke: bool) -> list[LowCoordRun]:
-    runs: list[LowCoordRun] = []
+def _load_zerorag_runs(results_root: Path, *, include_smoke: bool) -> list[ZeroRAGRun]:
+    runs: list[ZeroRAGRun] = []
     for paths in _find_result_paths(results_root, include_smoke=include_smoke):
         manifest = _read_json(paths.manifest_path)
         metrics = _read_json(paths.metrics_path)
@@ -173,7 +174,7 @@ def _load_lowcoord_runs(results_root: Path, *, include_smoke: bool) -> list[LowC
             continue
 
         runs.append(
-            LowCoordRun(
+            ZeroRAGRun(
                 run_dir=paths.run_dir,
                 dataset=dataset,
                 amazon_category=amazon_category,
@@ -221,7 +222,7 @@ def _load_executed_event_indices(query_log_path: Path) -> set[int]:
     return indices
 
 
-def _iter_run_events(run: LowCoordRun) -> Iterator[QueryEvent]:
+def _iter_run_events(run: ZeroRAGRun) -> Iterator[QueryEvent]:
     yield from iter_query_events(
         run.metadata_path,
         searchable_only=False,
@@ -230,7 +231,7 @@ def _iter_run_events(run: LowCoordRun) -> Iterator[QueryEvent]:
     )
 
 
-def _count_unique_users(run: LowCoordRun) -> int:
+def _count_unique_users(run: ZeroRAGRun) -> int:
     cache_key = (
         str(run.metadata_path),
         int(run.max_events),
@@ -249,7 +250,7 @@ def _count_unique_users(run: LowCoordRun) -> int:
     return result
 
 
-def _estimate_seeded_ownership(run: LowCoordRun) -> OwnershipEstimate:
+def _estimate_seeded_ownership(run: ZeroRAGRun) -> OwnershipEstimate:
     if run.seeded_peer_docs_path is None or not run.seeded_peer_docs_path.exists():
         return OwnershipEstimate(
             peer_count=0,
@@ -277,7 +278,7 @@ def _estimate_seeded_ownership(run: LowCoordRun) -> OwnershipEstimate:
     )
 
 
-def _estimate_runtime_ownership(run: LowCoordRun) -> OwnershipEstimate:
+def _estimate_runtime_ownership(run: ZeroRAGRun) -> OwnershipEstimate:
     query_log_path = run.run_dir / "query_log.jsonl"
     executed_indices = _load_executed_event_indices(query_log_path)
     if not executed_indices:
@@ -346,14 +347,14 @@ def _estimate_runtime_ownership(run: LowCoordRun) -> OwnershipEstimate:
     )
 
 
-def estimate_lowcoord_run(run: LowCoordRun) -> LowCoordEstimate:
+def estimate_zerorag_run(run: ZeroRAGRun) -> ZeroRAGEstimate:
     print(
-        f"[lowcoord] estimating {run.dataset_key} {run.run_dir.name} "
+        f"[zerorag] estimating {run.dataset_key} {run.run_dir.name} "
         f"scenario={run.scenario} selection={run.selection_mode}",
         flush=True,
     )
     if run.selection_mode == "random_walk":
-        return LowCoordEstimate(
+        return ZeroRAGEstimate(
             run=run,
             ownership=OwnershipEstimate(
                 peer_count=0,
@@ -388,7 +389,7 @@ def estimate_lowcoord_run(run: LowCoordRun) -> LowCoordEstimate:
     if run.routing_mode == "semantic_query_memory":
         routed_upper = run.overall_avg_cycles * run.max_routed_queries
 
-    return LowCoordEstimate(
+    return ZeroRAGEstimate(
         run=run,
         ownership=ownership,
         scanned_neighbors_per_cycle=scanned_neighbors,
@@ -398,7 +399,7 @@ def estimate_lowcoord_run(run: LowCoordRun) -> LowCoordEstimate:
     )
 
 
-def _write_lowcoord_estimates(path: Path, estimates: Iterable[LowCoordEstimate]) -> None:
+def _write_zerorag_estimates(path: Path, estimates: Iterable[ZeroRAGEstimate]) -> None:
     fieldnames = (
         "dataset_key",
         "dataset",
@@ -469,8 +470,8 @@ def _write_lowcoord_estimates(path: Path, estimates: Iterable[LowCoordEstimate])
             )
 
 
-def _best_runs_by_dataset(estimates: Iterable[LowCoordEstimate]) -> dict[str, LowCoordRun]:
-    best: dict[str, LowCoordRun] = {}
+def _best_runs_by_dataset(estimates: Iterable[ZeroRAGEstimate]) -> dict[str, ZeroRAGRun]:
+    best: dict[str, ZeroRAGRun] = {}
     best_comparisons: dict[str, float] = {}
     for estimate in estimates:
         run = estimate.run
@@ -497,7 +498,7 @@ def _best_runs_by_dataset(estimates: Iterable[LowCoordEstimate]) -> dict[str, Lo
     return best
 
 
-def _dataset_hnsw_target(best_run: LowCoordRun) -> HnswDatasetTarget:
+def _dataset_hnsw_target(best_run: ZeroRAGRun) -> HnswDatasetTarget:
     metadata_path = _default_metadata_path_for_scenario(
         HNSW_SCENARIO,
         dataset=best_run.dataset,
@@ -1007,8 +1008,8 @@ def run_hnsw_for_target(
         "dataset_key": target.dataset_key,
         "dataset": target.dataset,
         "amazon_category": target.amazon_category,
-        "target_lowcoord_run_dir": str(target.target_run_dir),
-        "target_lowcoord_recall": target.target_recall,
+        "target_zerorag_run_dir": str(target.target_run_dir),
+        "target_zerorag_recall": target.target_recall,
         "metadata_path": str(target.metadata_path),
         "searchable_queries_path": str(target.searchable_queries_path),
         "embedding_manifest_path": str(target.embedding_manifest_path),
@@ -1022,7 +1023,7 @@ def run_hnsw_for_target(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Estimate Low-Coord document-comparison work and run one dataset-level "
+            "Estimate ZeroRAG document-comparison work and run one dataset-level "
             "HNSW comparison sweep per dataset."
         )
     )
@@ -1042,7 +1043,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skip-hnsw",
         action="store_true",
-        help="Only write Low-Coord comparison estimates.",
+        help="Only write ZeroRAG comparison estimates.",
     )
     parser.add_argument(
         "--backend",
@@ -1110,17 +1111,17 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     selected_datasets = set(args.datasets or [])
-    runs = _load_lowcoord_runs(results_root, include_smoke=args.include_smoke)
+    runs = _load_zerorag_runs(results_root, include_smoke=args.include_smoke)
     if selected_datasets:
         runs = [run for run in runs if run.dataset_key in selected_datasets]
     if not runs:
-        raise SystemExit(f"No finished Low-Coord runs found under {results_root}")
-    print(f"[lowcoord] loaded {len(runs):,} finished Low-Coord runs", flush=True)
+        raise SystemExit(f"No finished ZeroRAG runs found under {results_root}")
+    print(f"[zerorag] loaded {len(runs):,} finished ZeroRAG runs", flush=True)
 
-    estimates = [estimate_lowcoord_run(run) for run in runs]
-    lowcoord_path = output_dir / "lowcoord_comparison_estimates.csv"
-    _write_lowcoord_estimates(lowcoord_path, estimates)
-    print(f"[lowcoord] wrote {lowcoord_path}", flush=True)
+    estimates = [estimate_zerorag_run(run) for run in runs]
+    zerorag_path = output_dir / "zerorag_comparison_estimates.csv"
+    _write_zerorag_estimates(zerorag_path, estimates)
+    print(f"[zerorag] wrote {zerorag_path}", flush=True)
 
     if args.skip_hnsw:
         return
@@ -1177,8 +1178,8 @@ def main() -> None:
     summary_path.write_text(json.dumps(summaries, indent=2), encoding="utf-8")
     _write_csv(output_dir / "hnsw_best_dataset_comparison.csv", [s["selected"] | {
         "dataset_key": s["dataset_key"],
-        "target_lowcoord_recall": s["target_lowcoord_recall"],
-        "target_lowcoord_run_dir": s["target_lowcoord_run_dir"],
+        "target_zerorag_recall": s["target_zerorag_recall"],
+        "target_zerorag_run_dir": s["target_zerorag_run_dir"],
         "indexed_doc_count": s["indexed_doc_count"],
     } for s in summaries])
     print(f"[hnsw] wrote {summary_path}", flush=True)

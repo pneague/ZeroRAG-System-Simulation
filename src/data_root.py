@@ -8,8 +8,8 @@ Precedence:
 2. Local marker-file presence under ``<repo>/data/<dataset>[/<category>]/``.
    Each dataset declares its own marker files; if any of them exist on disk
    we treat the local copy as authoritative.
-3. Hardcoded scratch fallback at
-   ``/var/scratch/pmneague/Low_Coord_Semantic_DHT/data/<dataset>[/<category>]/``.
+3. Environment-driven scratch fallback at
+   ``<scratch-root>/data/<dataset>[/<category>]/``.
 
 The same helper is used by all dataset callers so large local artifacts can be
 migrated to scratch on remote without changing code call sites.
@@ -21,9 +21,11 @@ import os
 from pathlib import Path
 from typing import Literal
 
+from .path_defaults import default_data_root
+
 
 DATA_ROOT_ENV_VAR = "LOW_COORD_DHT_DATA_ROOT"
-DEFAULT_SCRATCH_DATA_ROOT = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/data")
+DEFAULT_SCRATCH_DATA_ROOT = default_data_root()
 LOCAL_DATA_ROOT = Path(__file__).resolve().parent.parent / "data"
 
 

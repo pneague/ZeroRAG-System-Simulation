@@ -8,7 +8,7 @@ from typing import Sequence
 
 from src.dataset import QueryEvent
 from src.metrics import MetricsTracker, QueryLog
-from src.network import LowCoordSemanticDHTNetwork, RUNTIME_SEARCHABLE_SCENARIOS
+from src.network import RUNTIME_SEARCHABLE_SCENARIOS, ZeroRAGNetwork
 from src.peer import PeerResponse, RoutedQuery, VectorComparisonCounts
 from src.routing import (
     SearchResult,
@@ -45,16 +45,16 @@ class EpochParallelSummary:
     max_worker_search_seconds: float = 0.0
 
 
-_WORKER_NETWORK: LowCoordSemanticDHTNetwork | None = None
+_WORKER_NETWORK: ZeroRAGNetwork | None = None
 
 
-def _set_worker_network(network: LowCoordSemanticDHTNetwork) -> None:
+def _set_worker_network(network: ZeroRAGNetwork) -> None:
     global _WORKER_NETWORK
     _WORKER_NETWORK = network
 
 
 def _worker_query_peer(
-    network: LowCoordSemanticDHTNetwork,
+    network: ZeroRAGNetwork,
     peer_id: int,
     *,
     query_embedding,
@@ -91,7 +91,7 @@ def _worker_query_peer(
     return computation.response
 
 
-def _skip_reason(network: LowCoordSemanticDHTNetwork, event: QueryEvent) -> str | None:
+def _skip_reason(network: ZeroRAGNetwork, event: QueryEvent) -> str | None:
     if network.config.scenario in RUNTIME_SEARCHABLE_SCENARIOS:
         raise RuntimeError("epoch_parallel does not support runtime-searchable scenarios yet")
     if network.config.retrieval_mode == "multi_relevant":
@@ -106,7 +106,7 @@ def _skip_reason(network: LowCoordSemanticDHTNetwork, event: QueryEvent) -> str 
     return None
 
 
-def _compute_event_delta(network: LowCoordSemanticDHTNetwork, event: QueryEvent) -> EventDelta:
+def _compute_event_delta(network: ZeroRAGNetwork, event: QueryEvent) -> EventDelta:
     reason = _skip_reason(network, event)
     if reason is not None:
         return EventDelta(
@@ -227,11 +227,11 @@ def _worker_event_chunk(chunk: list[QueryEvent]) -> list[EventDelta]:
     return [_compute_event_delta(network, event) for event in chunk]
 
 
-class LowCoordEpochParallelDriver:
+class ZeroRAGEpochParallelDriver:
     def __init__(
         self,
         *,
-        network: LowCoordSemanticDHTNetwork,
+        network: ZeroRAGNetwork,
         parallelism: int,
         chunk_size: int,
         epoch_count: int = 0,
@@ -334,3 +334,7 @@ class LowCoordEpochParallelDriver:
                 self.network.search_profile["max_search_seconds"],
                 delta.search_seconds,
             )
+
+
+# Backward-compatible import name for existing Slurm scripts, tests, and notebooks.
+LowCoordEpochParallelDriver = ZeroRAGEpochParallelDriver

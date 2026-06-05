@@ -17,8 +17,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from src.dataset import QueryEvent
 from src.metrics import MetricsTracker, QueryLog
-from src.network import LowCoordSemanticDHTNetwork, SimulationConfig
-from src.parallel_network import LowCoordEpochParallelDriver
+from src.network import ZeroRAGNetwork, SimulationConfig
+from src.parallel_network import ZeroRAGEpochParallelDriver
 from src.peer import Peer, Referral, RoutedQuery, VectorComparisonCounts
 from src.routing import SearchResult
 
@@ -86,8 +86,8 @@ class ReplicaOptimizationTests(unittest.TestCase):
         max_neighbors: int = 60,
         search_mode: str = "best_first",
         fanout: int = 1,
-    ) -> LowCoordSemanticDHTNetwork:
-        return LowCoordSemanticDHTNetwork.from_embedding_manifest(
+    ) -> ZeroRAGNetwork:
+        return ZeroRAGNetwork.from_embedding_manifest(
             peer_ids=[1, 2, 3],
             manifest_path=self.manifest_path,
             config=SimulationConfig(
@@ -854,7 +854,7 @@ class ReplicaOptimizationTests(unittest.TestCase):
                 clicked_doc_id="doc_a",
             ),
         ]
-        driver = LowCoordEpochParallelDriver(
+        driver = ZeroRAGEpochParallelDriver(
             network=network,
             parallelism=2,
             chunk_size=1,

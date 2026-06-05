@@ -311,7 +311,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
         from experiments.run_simulation import _load_ownership_injections
         from precompute_synthetic import precompute_synthetic_artifacts
         from src.metrics import MetricsTracker
-        from src.network import LowCoordSemanticDHTNetwork, SimulationConfig
+        from src.network import ZeroRAGNetwork, SimulationConfig
 
         data_dir = resolve_dataset_dir("synthetic")
         summary = precompute_synthetic_artifacts(
@@ -350,7 +350,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
             max_cycles=1,
             random_seed=39,
         )
-        network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+        network = ZeroRAGNetwork.from_embedding_manifest(
             peer_ids=[event.user_id for event in events],
             manifest_path=summary["manifest_path"],
             config=config,
@@ -367,7 +367,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
     def test_successful_single_target_search_acquires_doc(self) -> None:
         from precompute_synthetic import precompute_synthetic_artifacts
         from src.metrics import MetricsTracker
-        from src.network import LowCoordSemanticDHTNetwork, SimulationConfig
+        from src.network import ZeroRAGNetwork, SimulationConfig
 
         data_dir = resolve_dataset_dir("synthetic")
         summary = precompute_synthetic_artifacts(
@@ -399,7 +399,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
             max_cycles=3,
             random_seed=41,
         )
-        network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+        network = ZeroRAGNetwork.from_embedding_manifest(
             peer_ids=[candidate.user_id for candidate in events],
             manifest_path=summary["manifest_path"],
             config=config,
@@ -416,7 +416,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
     def test_failed_single_target_search_does_not_acquire_doc(self) -> None:
         from precompute_synthetic import precompute_synthetic_artifacts
         from src.metrics import MetricsTracker
-        from src.network import LowCoordSemanticDHTNetwork, SimulationConfig
+        from src.network import ZeroRAGNetwork, SimulationConfig
 
         data_dir = resolve_dataset_dir("synthetic")
         summary = precompute_synthetic_artifacts(
@@ -447,7 +447,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
             max_cycles=3,
             random_seed=43,
         )
-        network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+        network = ZeroRAGNetwork.from_embedding_manifest(
             peer_ids=[candidate.user_id for candidate in events],
             manifest_path=summary["manifest_path"],
             config=config,
@@ -462,7 +462,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
     def test_churn_deactivation_removes_active_doc_ownership(self) -> None:
         from experiments.run_simulation import _load_seeded_doc_mapping
         from precompute_synthetic import precompute_synthetic_artifacts
-        from src.network import LowCoordSemanticDHTNetwork, SimulationConfig
+        from src.network import ZeroRAGNetwork, SimulationConfig
 
         data_dir = resolve_dataset_dir("synthetic")
         summary = precompute_synthetic_artifacts(
@@ -492,7 +492,7 @@ class SyntheticPrecomputeTests(unittest.TestCase):
             random_seed=31,
             churn_mode="drop",
         )
-        network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+        network = ZeroRAGNetwork.from_embedding_manifest(
             peer_ids=[event.user_id for event in events],
             manifest_path=summary["manifest_path"],
             config=config,

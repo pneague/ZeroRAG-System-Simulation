@@ -7,13 +7,20 @@ import argparse
 import csv
 import json
 import re
+import sys
 import time
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Iterable
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-DEFAULT_SCRATCH = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT")
+from src.path_defaults import default_scratch_root  # noqa: E402
+
+
+DEFAULT_SCRATCH = default_scratch_root()
 DEFAULT_DATASET_DIR = DEFAULT_SCRATCH / "data/pubmedqa_phi35_top5_checkpoints_q30_4x5k"
 DEFAULT_OUTPUT_DIR = DEFAULT_SCRATCH / "results/pubmedqa_phi35_top5_checkpoints_q30_4x5k"
 LABELS = ("yes", "no", "maybe")
@@ -22,6 +29,10 @@ SHORT_COT_DIRECTIVE = (
     "'Final answer: <yes|no|maybe>'.\n\nAnswer:\n"
 )
 STOP_STRINGS = ("Final answer: yes", "Final answer: no", "Final answer: maybe")
+
+
+def _canonical_method(method: str) -> str:
+    return "zerorag" if method in {"lowcoord", "low_coord"} else method
 
 
 def _iter_jsonl(path: Path) -> Iterable[dict[str, Any]]:
@@ -546,6 +557,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    requested_methods: list[str] = []
+    for method in args.methods:
+        canonical = _canonical_method(method)
+        if canonical not in requested_methods:
+            requested_methods.append(canonical)
+    args.methods = requested_methods
     args.output_dir.mkdir(parents=True, exist_ok=True)
     if not args.metrics_only:
         tokenizer, model = _load_model(args)

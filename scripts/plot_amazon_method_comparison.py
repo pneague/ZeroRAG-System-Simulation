@@ -148,7 +148,8 @@ def _explicit_runs(specs: list[str]) -> tuple[list[tuple[str, Path]], list[str]]
             errors.append(f"invalid explicit run {spec!r}; expected method::label::run_dir")
             continue
         method, label, run_dir = parts
-        if method not in {"low_coord", "random_walk", "lsh", "semantica"}:
+        method = "zerorag" if method in {"low_coord", "lowcoord"} else method
+        if method not in {"zerorag", "random_walk", "lsh", "semantica"}:
             errors.append(f"invalid method {method!r} in explicit run {spec!r}")
             continue
         path = Path(run_dir)
@@ -260,7 +261,8 @@ def main() -> None:
         metavar="METHOD::LABEL::RUN_DIR",
         help=(
             "Explicit partial run to plot, bypassing manifest discovery. "
-            "METHOD is one of low_coord, random_walk, lsh, semantica. "
+            "METHOD is one of zerorag, random_walk, lsh, semantica. "
+            "The legacy low_coord name is still accepted as an alias. "
             "Can be repeated."
         ),
     )
@@ -300,7 +302,7 @@ def main() -> None:
                 all_records, category=args.amazon_category, include_smoke=args.include_smoke
             )
             selected_runs = []
-            for method in ["low_coord", "random_walk", "lsh", "semantica"]:
+            for method in ["zerorag", "random_walk", "lsh", "semantica"]:
                 record = _find_primary_record(
                     records, dataset="amazon", scenario=scenario, method=method
                 )

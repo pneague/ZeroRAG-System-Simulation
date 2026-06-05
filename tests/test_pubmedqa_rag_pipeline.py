@@ -26,7 +26,7 @@ from scripts.plot_topic_rank_histogram import build_topic_rank_rows
 from scripts.pubmedqa_top10_retrieval import (
     _hnsw_rows,
     _load_answer_targets,
-    _low_coord_rows,
+    _zerorag_rows,
     _lsh_rows,
     _semantica_rows,
 )
@@ -341,8 +341,8 @@ class PubMedQaRagPipelineTests(unittest.TestCase):
             seeded_mapping = {int(peer): docs for peer, docs in json.load(handle).items()}
         manifest_path = data_dir / "embeddings" / "manifest.json"
 
-        low_coord = list(
-            _low_coord_rows(
+        zerorag = list(
+            _zerorag_rows(
                 events=events,
                 manifest_path=manifest_path,
                 seeded_mapping=seeded_mapping,
@@ -389,21 +389,21 @@ class PubMedQaRagPipelineTests(unittest.TestCase):
                 expansion_rounds=1,
             )
         )
-        self.assertEqual(len(low_coord), len(events))
+        self.assertEqual(len(zerorag), len(events))
         self.assertEqual(len(lsh), len(events))
         self.assertEqual(len(semantica), len(events))
-        self.assertTrue(all(row["model"] == "low_coord" for row in low_coord))
-        self.assertTrue(any("search_seconds" in row for row in low_coord))
+        self.assertTrue(all(row["model"] == "zerorag" for row in zerorag))
+        self.assertTrue(any("search_seconds" in row for row in zerorag))
         self.assertTrue(
             all(
                 "continued_after_found" in row
-                for row in low_coord
+                for row in zerorag
                 if row.get("skipped_reason") is None
             )
         )
         self.assertTrue(all("top10_doc_ids" in row for row in lsh + semantica))
 
-    def test_low_coord_top10_applies_drift_injection_before_event(self) -> None:
+    def test_zerorag_top10_applies_drift_injection_before_event(self) -> None:
         manifest_dir = self.root / "injection_fixture"
         manifest_dir.mkdir()
         np.save(manifest_dir / "doc_keys.npy", np.asarray(["target", "other"], dtype=str))
@@ -435,7 +435,7 @@ class PubMedQaRagPipelineTests(unittest.TestCase):
         ]
 
         rows = list(
-            _low_coord_rows(
+            _zerorag_rows(
                 events=events,
                 manifest_path=manifest_path,
                 seeded_mapping={0: [], 1: ["other"]},
@@ -463,4 +463,3 @@ class PubMedQaRagPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

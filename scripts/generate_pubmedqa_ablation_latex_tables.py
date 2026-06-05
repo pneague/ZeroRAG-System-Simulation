@@ -13,26 +13,26 @@ import argparse
 import json
 import math
 import re
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from statistics import mean, stdev
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
+from src.path_defaults import default_results_root  # noqa: E402
+
+
+DEFAULT_RESULTS_ROOT = default_results_root()
 DEFAULT_ROOTS = {
-    42: Path(
-        "/var/scratch/pmneague/Low_Coord_Semantic_DHT/results/"
-        "pubmedqa_expanded_all_mesh_alpha0p00007_q30/compact_retry/ablations"
-    ),
-    43: Path(
-        "/var/scratch/pmneague/Low_Coord_Semantic_DHT/results/"
-        "pubmedqa_expanded_all_mesh_alpha0p00007_q30/compact_retry_seed_repeats/"
-        "seed43/ablations"
-    ),
-    44: Path(
-        "/var/scratch/pmneague/Low_Coord_Semantic_DHT/results/"
-        "pubmedqa_expanded_all_mesh_alpha0p00007_q30/compact_retry_seed_repeats/"
-        "seed44/ablations"
-    ),
+    42: DEFAULT_RESULTS_ROOT
+    / "pubmedqa_expanded_all_mesh_alpha0p00007_q30/compact_retry/ablations",
+    43: DEFAULT_RESULTS_ROOT
+    / "pubmedqa_expanded_all_mesh_alpha0p00007_q30/compact_retry_seed_repeats/seed43/ablations",
+    44: DEFAULT_RESULTS_ROOT
+    / "pubmedqa_expanded_all_mesh_alpha0p00007_q30/compact_retry_seed_repeats/seed44/ablations",
 }
 
 FAMILY_ORDER = {

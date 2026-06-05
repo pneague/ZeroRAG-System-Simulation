@@ -20,6 +20,7 @@ docs/
 results/
 remote_plots/
 scratch_rerun/
+local_archives/
 *.log
 *.out
 *.err

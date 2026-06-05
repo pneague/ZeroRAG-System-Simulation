@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -31,8 +32,15 @@ Answer:
 """
 
 
-DEFAULT_ROOT = Path("/home/pmneague/DecentANN_remote/Low_Coord_Semantic_DHT")
-DEFAULT_SCRATCH = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.path_defaults import default_project_root, default_scratch_root  # noqa: E402
+
+
+DEFAULT_ROOT = default_project_root(REPO_ROOT)
+DEFAULT_SCRATCH = default_scratch_root()
 DEFAULT_Q30_HOME_RESULTS = DEFAULT_ROOT / "results/pubmedqa_expanded_all_mesh_alpha0p00007_q30"
 DEFAULT_Q30_SCRATCH_DATA = DEFAULT_SCRATCH / "data/pubmedqa_expanded_all_mesh_alpha0p00007_q30/pubmedqa"
 DEFAULT_SOURCE_FULL_DIR = DEFAULT_SCRATCH / "results/pubmedqa_full_hnsw_original_m32_ef512"
@@ -398,10 +406,15 @@ def build_dataset(args: argparse.Namespace) -> dict[str, Any]:
         "zerorag": args.zerorag_jsonl,
         "hnsw": args.hnsw_jsonl,
     }
-    unknown_methods = sorted(set(args.methods) - set(all_method_inputs))
+    requested_methods: list[str] = []
+    for method in args.methods:
+        canonical = "zerorag" if method == "lowcoord" else method
+        if canonical not in requested_methods:
+            requested_methods.append(canonical)
+    unknown_methods = sorted(set(requested_methods) - set(all_method_inputs))
     if unknown_methods:
         raise ValueError(f"Unknown methods requested: {unknown_methods}")
-    method_inputs = {method: all_method_inputs[method] for method in args.methods}
+    method_inputs = {method: all_method_inputs[method] for method in requested_methods}
     selected_rows: dict[str, list[dict[str, Any]]] = {}
     retrieval_stats: dict[str, dict[str, int]] = {}
     all_qids: set[int] = set()
@@ -490,9 +503,16 @@ def build_dataset(args: argparse.Namespace) -> dict[str, Any]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--zerorag-jsonl", type=Path, default=DEFAULT_Q30_HOME_RESULTS / "zerorag/pubmedqa_top10_low_coord.jsonl")
+    parser.add_argument("--zerorag-jsonl", type=Path, default=DEFAULT_Q30_HOME_RESULTS / "zerorag/pubmedqa_top10_zerorag.jsonl")
+    parser.add_argument(
+        "--lowcoord-jsonl",
+        type=Path,
+        dest="zerorag_jsonl",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--hnsw-jsonl", type=Path, default=DEFAULT_Q30_HOME_RESULTS / "hnsw_m16_ef64/pubmedqa_top10_hnsw.jsonl")
-    parser.add_argument("--methods", nargs="+", default=["zerorag", "hnsw"], choices=("zerorag", "hnsw"))
+    parser.add_argument("--methods", nargs="+", default=["zerorag", "hnsw"], choices=("zerorag", "lowcoord", "hnsw"))
     parser.add_argument("--answer-targets", type=Path, default=DEFAULT_Q30_SCRATCH_DATA / "answer_targets.jsonl")
     parser.add_argument("--corpus-manifest", type=Path, default=DEFAULT_SOURCE_FULL_DIR / "corpus_manifest.jsonl")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)

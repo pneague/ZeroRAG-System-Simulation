@@ -20,7 +20,7 @@ if str(REPO_ROOT) not in sys.path:
 from src.data_root import resolve_dataset_dir
 from src.dataset import load_query_events
 from src.lsh_network import LSHDHTNetwork, LSHSimulationConfig
-from src.network import EmbeddingLookup, LowCoordSemanticDHTNetwork, SimulationConfig
+from src.network import EmbeddingLookup, SimulationConfig, ZeroRAGNetwork
 from src.peer import VectorComparisonCounts
 from src.pubmedqa_dataset import (
     PUBMEDQA_ANSWER_TARGETS_FILENAME,
@@ -34,6 +34,13 @@ from src.semantica_network import (
     SemanticaSimulationConfig,
     run_closest_user_chain,
 )
+
+ZERORAG_MODEL = "zerorag"
+ZERORAG_MODEL_ALIASES = {ZERORAG_MODEL, "low_coord", "lowcoord"}
+
+
+def _canonical_model_name(model: str) -> str:
+    return ZERORAG_MODEL if model in ZERORAG_MODEL_ALIASES else model
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -230,7 +237,7 @@ def _run_best_first_search_continue_after_found(
     }
 
 
-def _low_coord_rows(
+def _zerorag_rows(
     *,
     events,
     manifest_path: Path,
@@ -248,8 +255,10 @@ def _low_coord_rows(
     similarity_threshold: float,
     continue_after_found: bool = False,
     drift_owner_injections: list[dict[str, int | str]] | None = None,
+    load_query_embeddings_into_memory: bool = False,
+    load_doc_embeddings_into_memory: bool = False,
 ):
-    network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+    network = ZeroRAGNetwork.from_embedding_manifest(
         peer_ids={event.user_id for event in events},
         manifest_path=manifest_path,
         config=SimulationConfig(
@@ -264,6 +273,8 @@ def _low_coord_rows(
             similarity_threshold=similarity_threshold,
             random_seed=random_seed,
         ),
+        load_query_embeddings_into_memory=load_query_embeddings_into_memory,
+        load_doc_embeddings_into_memory=load_doc_embeddings_into_memory,
     )
     network.seed_peer_docs(seeded_mapping)
     if drift_owner_injections:
@@ -276,7 +287,7 @@ def _low_coord_rows(
             yield _base_output_row(
                 event=event,
                 answer_targets=answer_targets,
-                model="low_coord",
+                model=ZERORAG_MODEL,
                 top_doc_ids=[],
                 top_scores=[],
                 skipped_reason="non_searchable",
@@ -286,7 +297,7 @@ def _low_coord_rows(
             yield _base_output_row(
                 event=event,
                 answer_targets=answer_targets,
-                model="low_coord",
+                model=ZERORAG_MODEL,
                 top_doc_ids=[],
                 top_scores=[],
                 skipped_reason="missing_query_embedding",
@@ -355,7 +366,7 @@ def _low_coord_rows(
         yield _base_output_row(
             event=event,
             answer_targets=answer_targets,
-            model="low_coord",
+            model=ZERORAG_MODEL,
             top_doc_ids=top_doc_ids,
             top_scores=top_scores,
             search_seconds=elapsed,
@@ -457,7 +468,10 @@ def _semantica_rows(
                 "candidate_doc_count": len(candidate_doc_ids),
                 "chain_found": bool(result and result.result_symbol == "+"),
             },
-        )
+            )
+
+
+_low_coord_rows = _zerorag_rows
 
 
 def _lsh_rows(
@@ -548,14 +562,23 @@ def _hnsw_rows(
     hnsw_m: int,
     construction_threads: int,
     search_threads: int,
+    load_query_embeddings_into_memory: bool = False,
+    load_doc_embeddings_into_memory: bool = False,
 ):
     manifest = _read_json(manifest_path)
     query_lookup = EmbeddingLookup(
         keys_path=manifest["query_keys_path"],
         embeddings_path=manifest["query_embeddings_path"],
+        load_into_memory=load_query_embeddings_into_memory,
     )
     doc_keys = [str(value) for value in np.load(manifest["doc_keys_path"], allow_pickle=True).tolist()]
-    doc_embeddings = np.asarray(np.load(manifest["doc_embeddings_path"], mmap_mode="r"), dtype=np.float32)
+    doc_embeddings = np.asarray(
+        np.load(
+            manifest["doc_embeddings_path"],
+            mmap_mode=None if load_doc_embeddings_into_memory else "r",
+        ),
+        dtype=np.float32,
+    )
 
     backend_name = backend
     index = None
@@ -653,8 +676,10 @@ def main() -> None:
     parser.add_argument("--seeded-peer-docs", type=Path, default=None)
     parser.add_argument("--answer-targets", type=Path, default=None)
     parser.add_argument("--drift-owner-injections", type=Path, default=None)
+    parser.add_argument("--load-query-embeddings-into-memory", action="store_true")
+    parser.add_argument("--load-doc-embeddings-into-memory", action="store_true")
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--models", default="low_coord,semantica,lsh,hnsw")
+    parser.add_argument("--models", default="zerorag,semantica,lsh,hnsw")
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--max-events", type=int, default=0)
     parser.add_argument("--random-seed", type=int, default=42)
@@ -666,7 +691,17 @@ def main() -> None:
     parser.add_argument("--fanout", type=int, default=1)
     parser.add_argument("--referrals-per-response", type=int, default=10)
     parser.add_argument("--similarity-threshold", type=float, default=0.5)
-    parser.add_argument("--low-coord-continue-after-found", action="store_true")
+    parser.add_argument(
+        "--zerorag-continue-after-found",
+        dest="zerorag_continue_after_found",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--low-coord-continue-after-found",
+        dest="zerorag_continue_after_found",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--lsh-k", type=int, default=10)
     parser.add_argument("--lsh-L", type=int, default=20)
     parser.add_argument("--lsh-w", type=float, default=0.75)
@@ -726,11 +761,15 @@ def main() -> None:
         "models": {},
     }
 
-    requested_models = [model.strip() for model in args.models.split(",") if model.strip()]
+    requested_models: list[str] = []
+    for raw_model in args.models.split(","):
+        model = _canonical_model_name(raw_model.strip())
+        if model and model not in requested_models:
+            requested_models.append(model)
     for model in requested_models:
         output_path = args.output_dir / f"pubmedqa_top{args.top_k}_{model}.jsonl"
-        if model == "low_coord":
-            rows = _low_coord_rows(
+        if model == ZERORAG_MODEL:
+            rows = _zerorag_rows(
                 events=events,
                 manifest_path=manifest_path,
                 seeded_mapping=seeded_mapping,
@@ -745,8 +784,10 @@ def main() -> None:
                 fanout=args.fanout,
                 referrals_per_response=args.referrals_per_response,
                 similarity_threshold=args.similarity_threshold,
-                continue_after_found=args.low_coord_continue_after_found,
+                continue_after_found=args.zerorag_continue_after_found,
                 drift_owner_injections=drift_owner_injections,
+                load_query_embeddings_into_memory=args.load_query_embeddings_into_memory,
+                load_doc_embeddings_into_memory=args.load_doc_embeddings_into_memory,
             )
         elif model == "semantica":
             rows = _semantica_rows(
@@ -786,6 +827,8 @@ def main() -> None:
                 hnsw_m=args.hnsw_m,
                 construction_threads=args.construction_threads,
                 search_threads=args.search_threads,
+                load_query_embeddings_into_memory=args.load_query_embeddings_into_memory,
+                load_doc_embeddings_into_memory=args.load_doc_embeddings_into_memory,
             )
         else:
             raise SystemExit(f"unknown model {model!r}")
@@ -799,4 +842,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

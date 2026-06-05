@@ -24,6 +24,7 @@ from src.dataset import (
     SEARCHABLE_QUERY_FIELDNAMES,
     synthetic_timestamp_for_index,
 )
+from src.path_defaults import default_results_root
 from src.pubmedqa_dataset import (
     DEFAULT_PUBMEDQA_DIRICHLET_ALPHA,
     DEFAULT_PUBMEDQA_QUERIES_PER_USER,
@@ -44,9 +45,7 @@ from src.pubmedqa_dataset import (
 DEFAULT_SELECTION_DIR = REPO_ROOT / "data" / "pubmedqa_rag" / "p80_500_batch_retrieval"
 DEFAULT_HF_ROOT = REPO_ROOT / "data" / "pubmedqa_rag" / "hf"
 DEFAULT_SOURCE_EMBEDDINGS_DIR = (
-    Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/results")
-    / "pubmedqa_p80_500_rephrasing_retrieval"
-    / "embeddings"
+    default_results_root() / "pubmedqa_p80_500_rephrasing_retrieval" / "embeddings"
 )
 
 
@@ -562,4 +561,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -40,10 +40,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.path_defaults import default_experiments_registry  # noqa: E402
 
-DEFAULT_EXPERIMENTS_REGISTRY = (
-    "/var/scratch/pmneague/Low_Coord_Semantic_DHT/experiments_registry.json"
-)
+DEFAULT_EXPERIMENTS_REGISTRY = str(default_experiments_registry())
 REGISTRY_SCHEMA_VERSION = 1
 ALGORITHM_NAME = "e2lsh_dht"
 
@@ -396,9 +395,18 @@ def main() -> None:
     parser.add_argument("--metadata", default=None)
     parser.add_argument("--searchable-queries", default=None)
     parser.add_argument("--embedding-manifest", default=None)
-    parser.add_argument("--output-dir", default=str(Path("results") / "low_coord_lsh_dht"))
+    parser.add_argument("--output-dir", default=str(Path("results") / "zerorag_lsh_dht"))
     parser.add_argument("--max-events", type=int, default=0, help="0 means all events")
     parser.add_argument("--metrics-window", type=int, default=1000)
+    parser.add_argument(
+        "--query-log-mode",
+        choices=("full", "window", "none"),
+        default=os.environ.get("LOW_COORD_DHT_QUERY_LOG_MODE", "full"),
+        help=(
+            "Query logging mode for MetricsTracker. Use 'none' for large sweeps "
+            "when only aggregate metrics are needed."
+        ),
+    )
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument(
         "--scenario",
@@ -655,7 +663,11 @@ def main() -> None:
         f"(requested {config.distinct_candidate_sample_size:,})."
     )
 
-    metrics = MetricsTracker(output_dir=args.output_dir, window_size=config.metrics_window)
+    metrics = MetricsTracker(
+        output_dir=args.output_dir,
+        window_size=config.metrics_window,
+        query_log_mode=args.query_log_mode,
+    )
     for event in tqdm(events, desc="Simulating events"):
         network.process_event(event, metrics)
     payload = metrics.finalize()

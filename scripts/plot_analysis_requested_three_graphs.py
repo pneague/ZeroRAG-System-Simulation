@@ -11,9 +11,16 @@ import csv
 import json
 import math
 import re
+import sys
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.path_defaults import default_results_root, default_scratch_root  # noqa: E402
 
 import matplotlib
 
@@ -513,13 +520,13 @@ def main() -> None:
     parser.add_argument(
         "--results-root",
         type=Path,
-        default=Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/results"),
+        default=default_results_root(),
         help="Directory containing run_* folders with query_log.jsonl",
     )
     parser.add_argument(
         "--out-dir",
         type=Path,
-        default=Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/analysis_requested_2026-05-18"),
+        default=default_scratch_root() / "analysis_requested_2026-05-18",
         help="Output directory for PNGs, CSV, partial manifest patch",
     )
     parser.add_argument("--window", type=int, default=1000, help="Rolling window size (queries)")

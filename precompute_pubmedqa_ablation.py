@@ -49,6 +49,7 @@ from precompute_pubmedqa_original_all_mesh import (  # noqa: E402
 )
 from src.dataset import AMAZON_EVENTS_FIELDNAMES, SEARCHABLE_QUERY_FIELDNAMES, synthetic_timestamp_for_index  # noqa: E402
 from src.embedder import DEFAULT_EMBEDDING_MODEL  # noqa: E402
+from src.path_defaults import default_data_root  # noqa: E402
 from src.pubmedqa_dataset import (  # noqa: E402
     DEFAULT_PUBMEDQA_RANDOM_SEED,
     PUBMEDQA_ANSWER_TARGETS_FILENAME,
@@ -66,7 +67,7 @@ from src.pubmedqa_dataset import (  # noqa: E402
 DEFAULT_BASE_DATA_ROOT = Path(
     os.environ.get(
         "LOW_COORD_DHT_PUBMEDQA_BASE_DATA_ROOT",
-        "/var/scratch/pmneague/Low_Coord_Semantic_DHT/data/pubmedqa_expanded_all_mesh_alpha0p00007_q30",
+        str(default_data_root() / "pubmedqa_expanded_all_mesh_alpha0p00007_q30"),
     )
 )
 DEFAULT_OUTPUT_ROOT = Path(

@@ -136,7 +136,7 @@ def main() -> None:
         "--jsonl",
         type=Path,
         required=True,
-        help="Path to pubmedqa_top10_low_coord.jsonl",
+        help="Path to pubmedqa_top10_zerorag.jsonl",
     )
     parser.add_argument(
         "--output-prefix",

@@ -5,17 +5,28 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Any, Iterable
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-DEFAULT_SCRATCH = Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT")
+from src.path_defaults import default_scratch_root  # noqa: E402
+
+
+DEFAULT_SCRATCH = default_scratch_root()
 DEFAULT_DATASET_DIR = DEFAULT_SCRATCH / "data/pubmedqa_phi35_top5_last200k_q30"
 SHORT_COT_DIRECTIVE = (
     "Provide a brief justification (max 2 sentences) and then write exactly one line in the form "
     "'Final answer: <yes|no|maybe>'.\n\nAnswer:\n"
 )
+
+
+def _canonical_method(method: str) -> str:
+    return "zerorag" if method in {"lowcoord", "low_coord"} else method
 
 
 def _iter_jsonl(path: Path) -> Iterable[dict[str, Any]]:
@@ -148,8 +159,14 @@ def main() -> None:
         use_fast=True,
     )
 
-    method_reports = []
+    requested_methods: list[str] = []
     for method in args.methods:
+        canonical = _canonical_method(method)
+        if canonical not in requested_methods:
+            requested_methods.append(canonical)
+
+    method_reports = []
+    for method in requested_methods:
         path = args.dataset_dir / f"{method}_examples.jsonl"
         if not path.exists():
             raise FileNotFoundError(f"Missing examples file: {path}")

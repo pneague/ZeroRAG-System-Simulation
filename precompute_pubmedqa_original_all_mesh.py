@@ -25,6 +25,7 @@ if str(SCRIPT_DIR) not in sys.path:
 from pubmedqa_embed_full_retrieval import PUBMEDQA_CONFIGS, _clean_str  # noqa: E402
 from src.data_root import resolve_dataset_dir  # noqa: E402
 from src.dataset import AMAZON_EVENTS_FIELDNAMES, SEARCHABLE_QUERY_FIELDNAMES, synthetic_timestamp_for_index  # noqa: E402
+from src.path_defaults import default_results_root  # noqa: E402
 from src.pubmedqa_dataset import (  # noqa: E402
     DEFAULT_PUBMEDQA_RANDOM_SEED,
     PUBMEDQA_ANSWER_TARGETS_FILENAME,
@@ -41,8 +42,7 @@ from src.pubmedqa_dataset import (  # noqa: E402
 
 DEFAULT_HF_ROOT = REPO_ROOT / "data" / "pubmedqa_rag" / "hf"
 DEFAULT_SOURCE_FULL_DIR = (
-    Path("/var/scratch/pmneague/Low_Coord_Semantic_DHT/results")
-    / "pubmedqa_full_hnsw_original_m32_ef512"
+    default_results_root() / "pubmedqa_full_hnsw_original_m32_ef512"
 )
 
 

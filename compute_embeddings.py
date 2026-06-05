@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute query and document embeddings for the Low_Coord_Semantic_DHT pipeline.
+"""Compute query and document embeddings for the ZeroRAG pipeline.
 
 Supports three datasets:
 

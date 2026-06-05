@@ -1,6 +1,6 @@
-# Low-Coordination Semantic DHT
+# ZeroRAG
 
-This project evaluates a low-coordination, peer-to-peer retrieval method over event
+This project evaluates ZeroRAG, a peer-to-peer retrieval method over event
 streams where each query belongs to a user peer and each target document is a clicked
 or positively bound item. The system is intentionally local: peers do not build a
 global index, do not broadcast queries, and do not require centralized routing state.
@@ -12,7 +12,7 @@ The main simulator is `experiments/run_simulation.py`. The core method lives in
 
 ## Method Overview
 
-The low-coordination method models retrieval as repeated local decisions on a directed
+ZeroRAG models retrieval as repeated local decisions on a directed
 peer graph.
 
 1. Every peer starts with at most `max_neighbors` outgoing connections. The simulator
@@ -104,7 +104,7 @@ referrals:
 
 The default `max_cycles` is `50`, and the querier itself counts as the first cycle.
 
-`--selection-mode random_walk` is an ablation rather than the low-coordination semantic
+`--selection-mode random_walk` is an ablation rather than the ZeroRAG semantic
 method. In that mode the simulator samples up to `max_cycles` active peers uniformly
 at random, excluding the querier, and checks whether any sampled peer owns the target
 document. It does not use the peer graph, referrals, query embeddings, routed-query
@@ -197,7 +197,7 @@ python experiments/run_simulation.py \
   --routing-mode semantic_query_memory \
   --topology-mode forming_new_connections \
   --max-events 5000 \
-  --output-dir results/smoke_low_coord
+  --output-dir results/smoke_zerorag
 ```
 
 On DAS-6, use the Slurm scripts in `scripts/` so long simulations run on compute nodes

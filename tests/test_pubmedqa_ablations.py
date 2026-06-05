@@ -25,7 +25,7 @@ from precompute_pubmedqa_ablation import (  # noqa: E402
 )
 from src.dataset import QueryEvent  # noqa: E402
 from src.metrics import MetricsTracker  # noqa: E402
-from src.network import LowCoordSemanticDHTNetwork, SimulationConfig  # noqa: E402
+from src.network import ZeroRAGNetwork, SimulationConfig  # noqa: E402
 
 
 class PubmedQaAblationPrecomputeTests(unittest.TestCase):
@@ -210,7 +210,7 @@ class PubmedQaAblationPrecomputeTests(unittest.TestCase):
 
 
 class PubmedQaChurnRuntimeTests(unittest.TestCase):
-    def _make_network(self, root: Path) -> LowCoordSemanticDHTNetwork:
+    def _make_network(self, root: Path) -> ZeroRAGNetwork:
         doc_keys = np.asarray(["doc_a", "doc_b", "doc_c"], dtype=str)
         query_keys = np.asarray(["q0"], dtype=str)
         doc_embeddings = np.eye(3, dtype=np.float32)
@@ -227,7 +227,7 @@ class PubmedQaChurnRuntimeTests(unittest.TestCase):
         }
         manifest_path = root / "manifest.json"
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-        network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+        network = ZeroRAGNetwork.from_embedding_manifest(
             peer_ids=[0, 1, 2],
             manifest_path=manifest_path,
             config=SimulationConfig(
@@ -308,7 +308,7 @@ class PubmedQaConceptDriftRuntimeTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            network = LowCoordSemanticDHTNetwork.from_embedding_manifest(
+            network = ZeroRAGNetwork.from_embedding_manifest(
                 peer_ids=[0, 1],
                 manifest_path=manifest_path,
                 config=SimulationConfig(

@@ -670,7 +670,7 @@ class SemanticaNetwork:
         }
 
     def _store_clicked_doc(self, peer_id: int, doc_id: str) -> None:
-        """Mirror :meth:`LowCoordSemanticDHTNetwork._store_clicked_doc`.
+        """Mirror :meth:`ZeroRAGNetwork._store_clicked_doc`.
 
         For seeded scenarios this is idempotent on re-clicks because the
         clicked doc is already in the seeded inventory.

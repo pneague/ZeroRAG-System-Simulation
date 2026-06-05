@@ -35,7 +35,7 @@ def _rolling_r10(jsonl_path: Path, *, window_size: int, max_event_index: int | N
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Overlay ZeroRAG ablation rolling recall@10")
-    parser.add_argument("--run", action="append", required=True, help="label|pubmedqa_top10_low_coord.jsonl")
+    parser.add_argument("--run", action="append", required=True, help="label|pubmedqa_top10_zerorag.jsonl")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--window", type=int, default=1000)
     parser.add_argument("--total-events", type=int, default=1_500_000)
@@ -80,7 +80,7 @@ def main() -> None:
 
     ax.set_title(
         args.title
-        or f"ZeroRAG PubMedQA ablations — rolling recall@10 until event {common_max_event:,} (window={args.window:,})"
+        or f"ZeroRAG PubMedQA ablations: rolling recall@10 until event {common_max_event:,} (window={args.window:,})"
     )
     ax.set_xlabel(f"Event index (right edge of {args.window:,}-query rolling window)")
     ax.set_ylabel("Rolling recall@10")
