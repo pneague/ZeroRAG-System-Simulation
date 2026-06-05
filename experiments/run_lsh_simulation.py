@@ -107,7 +107,7 @@ def _default_metadata_path_for_scenario(
             return pubmedqa_dir / PUBMEDQA_RANDOMIZED_EVENTS_FILENAME
         return pubmedqa_dir / PUBMEDQA_EVENTS_FILENAME
 
-    aol_dir = resolve_dataset_dir("aol4foltr")
+    aol_dir = resolve_dataset_dir("aol")
     if scenario in RANDOMIZED_TIMELINE_SCENARIOS:
         return aol_dir / SEEDED_RANDOMIZED_METADATA_FILENAME
     return aol_dir / METADATA_FILENAME
@@ -146,7 +146,7 @@ def _default_searchable_queries_path_for_scenario(
         from src.pubmedqa_dataset import PUBMEDQA_SEEDED_SEARCHABLE_FILENAME
 
         return resolve_dataset_dir("pubmedqa") / PUBMEDQA_SEEDED_SEARCHABLE_FILENAME
-    aol_dir = resolve_dataset_dir("aol4foltr")
+    aol_dir = resolve_dataset_dir("aol")
     if scenario == "empty_start_chronological":
         return aol_dir / CHRONOLOGICAL_SEARCHABLE_QUERIES_FILENAME
     return aol_dir / SEEDED_SEARCHABLE_QUERIES_FILENAME
@@ -163,7 +163,7 @@ def _default_embedding_manifest_path(*, dataset: str, amazon_category: str | Non
         return resolve_dataset_dir("synthetic") / "embeddings" / "manifest.json"
     if dataset == "pubmedqa":
         return resolve_dataset_dir("pubmedqa") / "embeddings" / "manifest.json"
-    return resolve_dataset_dir("aol4foltr") / "embeddings" / "manifest.json"
+    return resolve_dataset_dir("aol") / "embeddings" / "manifest.json"
 
 
 def _default_seeded_peer_docs_path(*, dataset: str, amazon_category: str | None) -> Path:
@@ -184,7 +184,7 @@ def _default_seeded_peer_docs_path(*, dataset: str, amazon_category: str | None)
         from src.pubmedqa_dataset import PUBMEDQA_PEER_FUTURE_DOCS_FILENAME
 
         return resolve_dataset_dir("pubmedqa") / PUBMEDQA_PEER_FUTURE_DOCS_FILENAME
-    return resolve_dataset_dir("aol4foltr") / "peer_future_doc_ids.json.gz"
+    return resolve_dataset_dir("aol") / "peer_future_doc_ids.json.gz"
 
 
 def _default_relevant_docs_by_qid_path(*, dataset: str, amazon_category: str | None) -> Path | None:
@@ -378,14 +378,14 @@ def main() -> None:
     from src.amazon_dataset import AMAZON_CATEGORY_SPECS
     from src.scenarios import ALL_SCENARIOS, DEFAULT_SCENARIO
 
-    dataset_choices = ("aol4foltr", "amazon", "mind", "synthetic", "pubmedqa")
+    dataset_choices = ("aol", "amazon", "mind", "synthetic", "pubmedqa")
     amazon_category_choices = tuple(sorted(AMAZON_CATEGORY_SPECS))
 
     parser = argparse.ArgumentParser(description="Run the Low_Coord_Semantic_DHT E2LSH baseline")
     parser.add_argument(
         "--dataset",
         choices=dataset_choices,
-        default=os.environ.get("LOW_COORD_DHT_DATASET", "aol4foltr"),
+        default=os.environ.get("LOW_COORD_DHT_DATASET", "aol"),
     )
     parser.add_argument(
         "--amazon-category",

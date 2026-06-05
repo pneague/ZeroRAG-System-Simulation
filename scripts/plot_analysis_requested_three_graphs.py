@@ -378,7 +378,7 @@ def default_specs(results_root: Path) -> tuple[list[RunSpec], list[RunSpec], lis
             "ZeroRAG",
             "ZeroRAG",
             results_root
-            / "aol4foltr_seeded_randomized_timeline_semantic_query_memory_forming_new_connections_exact_vector_comparisons_20260507T134722_run",
+            / "aol_seeded_randomized_timeline_semantic_query_memory_forming_new_connections_exact_vector_comparisons_20260507T134722_run",
             "recall",
         ),
         RunSpec(
@@ -394,7 +394,7 @@ def default_specs(results_root: Path) -> tuple[list[RunSpec], list[RunSpec], lis
         "ZeroRAG",
         "ZeroRAG no query memory",
         results_root
-        / "aol4foltr_seeded_randomized_timeline_replica_only_forming_new_connections_exact_vector_comparisons_20260507T134722_run",
+        / "aol_seeded_randomized_timeline_replica_only_forming_new_connections_exact_vector_comparisons_20260507T134722_run",
         "recall",
     )
     aol_specs += existing_spec(
@@ -402,7 +402,7 @@ def default_specs(results_root: Path) -> tuple[list[RunSpec], list[RunSpec], lis
         "ZeroRAG",
         "ZeroRAG no new connections",
         results_root
-        / "aol4foltr_seeded_randomized_timeline_semantic_query_memory_static_initial_connections_exact_vector_comparisons_20260518_run",
+        / "aol_seeded_randomized_timeline_semantic_query_memory_static_initial_connections_exact_vector_comparisons_20260518_run",
         "recall",
     )
     aol_specs += lsh_specs("AOL", "lsh_seeded_randomized_full_w*_k*_L*_run", results_root)
@@ -492,7 +492,7 @@ def default_hnsw_specs(results_root: Path) -> tuple[list[HnswSpec], list[HnswSpe
             HnswSpec(
                 "AOL",
                 "HNSW",
-                results_root / "hnsw_full_aol4foltr_trace_threads16",
+                results_root / "hnsw_full_aol_trace_threads16",
                 "recall",
             )
         ],

@@ -116,9 +116,9 @@ def _default_metadata_path(
         if scenario == "seeded_fixed_inventory":
             return pubmedqa_dir / PUBMEDQA_EVENTS_FILENAME
     if scenario == "seeded_randomized_timeline":
-        return resolve_dataset_dir("aol4foltr") / SEEDED_RANDOMIZED_METADATA_FILENAME
+        return resolve_dataset_dir("aol") / SEEDED_RANDOMIZED_METADATA_FILENAME
     if scenario in {"seeded_fixed_inventory", "empty_start_chronological"}:
-        return resolve_dataset_dir("aol4foltr") / METADATA_FILENAME
+        return resolve_dataset_dir("aol") / METADATA_FILENAME
     raise ValueError(f"Unsupported Semantica scenario for metadata: {scenario}")
 
 
@@ -158,9 +158,9 @@ def _default_searchable_queries_path(
         if scenario in SEEDED_SCENARIOS:
             return resolve_dataset_dir("pubmedqa") / PUBMEDQA_SEEDED_SEARCHABLE_FILENAME
     if scenario == "empty_start_chronological":
-        return resolve_dataset_dir("aol4foltr") / CHRONOLOGICAL_SEARCHABLE_QUERIES_FILENAME
+        return resolve_dataset_dir("aol") / CHRONOLOGICAL_SEARCHABLE_QUERIES_FILENAME
     if scenario in SEEDED_SCENARIOS:
-        return resolve_dataset_dir("aol4foltr") / SEEDED_SEARCHABLE_QUERIES_FILENAME
+        return resolve_dataset_dir("aol") / SEEDED_SEARCHABLE_QUERIES_FILENAME
     raise ValueError(f"Unsupported Semantica scenario for searchable queries: {scenario}")
 
 
@@ -175,7 +175,7 @@ def _default_embedding_manifest_path(*, dataset: str, amazon_category: str | Non
         return resolve_dataset_dir("synthetic") / "embeddings" / "manifest.json"
     if dataset == "pubmedqa":
         return resolve_dataset_dir("pubmedqa") / "embeddings" / "manifest.json"
-    return resolve_dataset_dir("aol4foltr") / "embeddings" / "manifest.json"
+    return resolve_dataset_dir("aol") / "embeddings" / "manifest.json"
 
 
 def _default_seeded_peer_docs_path(*, dataset: str, amazon_category: str | None) -> Path:
@@ -196,7 +196,7 @@ def _default_seeded_peer_docs_path(*, dataset: str, amazon_category: str | None)
         from src.pubmedqa_dataset import PUBMEDQA_PEER_FUTURE_DOCS_FILENAME
 
         return resolve_dataset_dir("pubmedqa") / PUBMEDQA_PEER_FUTURE_DOCS_FILENAME
-    return resolve_dataset_dir("aol4foltr") / "peer_future_doc_ids.json.gz"
+    return resolve_dataset_dir("aol") / "peer_future_doc_ids.json.gz"
 
 
 def _default_relevant_docs_by_qid_path(*, dataset: str, amazon_category: str | None) -> Path | None:
@@ -299,7 +299,7 @@ def main() -> None:
         SUPPORTED_STRATEGIES,
     )
 
-    dataset_choices = ("aol4foltr", "amazon", "mind", "synthetic", "pubmedqa")
+    dataset_choices = ("aol", "amazon", "mind", "synthetic", "pubmedqa")
     amazon_category_choices = tuple(sorted(AMAZON_CATEGORY_SPECS))
 
     parser = argparse.ArgumentParser(
@@ -308,7 +308,7 @@ def main() -> None:
     parser.add_argument(
         "--dataset",
         choices=dataset_choices,
-        default=os.environ.get("LOW_COORD_DHT_DATASET", "aol4foltr"),
+        default=os.environ.get("LOW_COORD_DHT_DATASET", "aol"),
     )
     parser.add_argument(
         "--amazon-category",

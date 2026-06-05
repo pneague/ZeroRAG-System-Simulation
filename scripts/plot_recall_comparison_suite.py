@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Callable, Iterable, TextIO
 
 
-DEFAULT_DATASETS = ("aol4foltr", "synthetic")
+DEFAULT_DATASETS = ("aol", "synthetic")
 DEFAULT_SCENARIOS = ("seeded_randomized_timeline", "fifo_randomized_timeline")
 DEFAULT_WINDOW_SIZE = 100
 SEMANTICA_FIFO_NOTE = "Semantica omitted: current runner is fixed-inventory only."
@@ -112,7 +112,7 @@ def _infer_dataset(manifest: dict, run_dir: Path) -> str:
         return "amazon"
     if "mind" in haystack:
         return "mind"
-    return "aol4foltr"
+    return "aol"
 
 
 def _infer_scenario(manifest: dict, run_dir: Path) -> str:

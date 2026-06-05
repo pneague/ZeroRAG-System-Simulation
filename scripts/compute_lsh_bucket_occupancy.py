@@ -40,7 +40,7 @@ def _default_embedding_manifest_path(*, dataset: str, amazon_category: str | Non
         return resolve_dataset_dir("synthetic") / "embeddings" / "manifest.json"
     if dataset == "pubmedqa":
         return resolve_dataset_dir("pubmedqa") / "embeddings" / "manifest.json"
-    return resolve_dataset_dir("aol4foltr") / "embeddings" / "manifest.json"
+    return resolve_dataset_dir("aol") / "embeddings" / "manifest.json"
 
 
 def _resolve_manifest_paths(manifest_path: Path) -> tuple[Path, Path, dict[str, Any]]:
@@ -289,7 +289,7 @@ def compute_occupancy(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Compute full-document LSH bucket occupancy.")
-    parser.add_argument("--dataset", default="aol4foltr")
+    parser.add_argument("--dataset", default="aol")
     parser.add_argument("--amazon-category", default=os.environ.get("LOW_COORD_DHT_AMAZON_CATEGORY"))
     parser.add_argument("--embedding-manifest", default=None)
     parser.add_argument(

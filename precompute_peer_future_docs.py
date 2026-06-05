@@ -61,17 +61,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Compute eventual clicked-doc sets per peer")
     parser.add_argument(
         "--input",
-        default=str(Path("data") / "aol4foltr" / METADATA_FILENAME),
+        default=str(Path("data") / "aol" / METADATA_FILENAME),
         help="Path to metadata CSV(.gz)",
     )
     parser.add_argument(
         "--output",
-        default=str(Path("data") / "aol4foltr" / "peer_future_doc_ids.json.gz"),
+        default=str(Path("data") / "aol" / "peer_future_doc_ids.json.gz"),
         help="Path to JSON(.gz) mapping of user_id -> eventual clicked doc ids",
     )
     parser.add_argument(
         "--summary-json",
-        default=str(Path("data") / "aol4foltr" / "peer_future_doc_ids_summary.json"),
+        default=str(Path("data") / "aol" / "peer_future_doc_ids_summary.json"),
         help="Optional summary JSON path",
     )
     args = parser.parse_args()

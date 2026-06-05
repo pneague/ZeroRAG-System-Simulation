@@ -114,21 +114,21 @@ def build_chronological_searchable_queries(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Compute chronological searchable labels for AOL4FOLTR metadata"
+        description="Compute chronological searchable labels for AOL metadata"
     )
     parser.add_argument(
         "--input",
-        default=str(Path("data") / "aol4foltr" / METADATA_FILENAME),
+        default=str(Path("data") / "aol" / METADATA_FILENAME),
         help="Path to metadata CSV(.gz)",
     )
     parser.add_argument(
         "--output",
-        default=str(Path("data") / "aol4foltr" / CHRONOLOGICAL_SEARCHABLE_QUERIES_FILENAME),
+        default=str(Path("data") / "aol" / CHRONOLOGICAL_SEARCHABLE_QUERIES_FILENAME),
         help="Path for chronological searchable sidecar CSV(.gz)",
     )
     parser.add_argument(
         "--summary-json",
-        default=str(Path("data") / "aol4foltr" / "chronological_searchable_queries_summary.json"),
+        default=str(Path("data") / "aol" / "chronological_searchable_queries_summary.json"),
         help="Optional summary JSON path",
     )
     args = parser.parse_args()

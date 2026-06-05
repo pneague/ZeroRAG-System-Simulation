@@ -3,7 +3,7 @@
 Precedence:
 
 1. ``LOW_COORD_DHT_DATA_ROOT`` env var (wins for every dataset, points at the
-   parent directory that holds ``aol4foltr/``, ``amazon/``, ``mind/``,
+   parent directory that holds ``aol/``, ``amazon/``, ``mind/``,
    ``synthetic/``, and ``pubmedqa/``).
 2. Local marker-file presence under ``<repo>/data/<dataset>[/<category>]/``.
    Each dataset declares its own marker files; if any of them exist on disk
@@ -33,7 +33,7 @@ LOCAL_DATA_ROOT = Path(__file__).resolve().parent.parent / "data"
 # The first marker that is found wins; if none exist locally we fall back
 # to scratch. Markers are evaluated in order and the first hit short-circuits.
 DATASET_MARKERS: dict[str, tuple[str, ...]] = {
-    "aol4foltr": ("metadata.csv",),
+    "aol": ("metadata.csv",),
     "amazon": ("events.csv", "benchmark/query_text.txt.gz"),
     "mind": ("events.csv", "raw/train/news.tsv"),
     "synthetic": ("events.csv",),
@@ -62,10 +62,10 @@ def _dataset_relative_path(dataset: str, category: str | None) -> Path:
                 f"unknown amazon category {category!r}; expected one of {AMAZON_CATEGORIES}"
             )
         return Path("amazon") / category
-    if dataset == "aol4foltr":
+    if dataset == "aol":
         if category is not None:
-            raise ValueError("aol4foltr does not accept a category argument")
-        return Path("aol4foltr")
+            raise ValueError("aol does not accept a category argument")
+        return Path("aol")
     if dataset == "mind":
         if category is not None:
             raise ValueError("mind does not accept a category argument")

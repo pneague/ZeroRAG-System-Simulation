@@ -54,7 +54,7 @@ def _resolve_default_paths(dataset: str, amazon_category: str | None) -> tuple[P
         searchable_path = amazon_dir / AMAZON_SEEDED_SEARCHABLE_FILENAME
         embeddings_path = amazon_dir / "embeddings" / "manifest.json"
     else:
-        aol_dir = resolve_dataset_dir("aol4foltr")
+        aol_dir = resolve_dataset_dir("aol")
         metadata_path = aol_dir / SEEDED_RANDOMIZED_METADATA_FILENAME
         if not metadata_path.exists():
             metadata_path = aol_dir / METADATA_FILENAME
@@ -71,7 +71,7 @@ def main() -> None:
     from src.lsh_network import LSHDHTNetwork, LSHSimulationConfig
 
     parser = argparse.ArgumentParser(description="Calibrate (w, k, L) for E2LSH on the chosen dataset")
-    parser.add_argument("--dataset", choices=("aol4foltr", "amazon"), default="aol4foltr")
+    parser.add_argument("--dataset", choices=("aol", "amazon"), default="aol")
     parser.add_argument(
         "--amazon-category",
         choices=tuple(sorted(AMAZON_CATEGORY_SPECS)),

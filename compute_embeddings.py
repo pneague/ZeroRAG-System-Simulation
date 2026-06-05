@@ -3,7 +3,7 @@
 
 Supports three datasets:
 
-* ``aol4foltr`` (default) - documents are pulled from the configured
+* ``aol`` (default) - documents are pulled from the configured
   ``ir_datasets`` corpus (typically ``aol-ia``).
 * ``amazon`` - documents are loaded from the per-category
   ``doc_metadata.csv.gz`` produced by :mod:`precompute_amazon`. The Amazon
@@ -239,7 +239,7 @@ def _embed_documents(
 
 
 def _resolve_aol_defaults(args: argparse.Namespace) -> tuple[Path, Path, Path]:
-    aol_dir = resolve_dataset_dir("aol4foltr")
+    aol_dir = resolve_dataset_dir("aol")
     metadata_path = Path(args.metadata) if args.metadata else aol_dir / "metadata.csv"
     searchable_queries = (
         Path(args.searchable_queries)
@@ -299,13 +299,13 @@ def main() -> None:
     default_model = "sentence-transformers/all-mpnet-base-v2"
 
     parser = argparse.ArgumentParser(
-        description="Compute query and document embeddings for AOL4FOLTR, Amazon, or MIND"
+        description="Compute query and document embeddings for AOL, Amazon, or MIND"
     )
     parser.add_argument(
         "--dataset",
-        choices=("aol4foltr", "amazon", "mind"),
-        default="aol4foltr",
-        help="Which dataset to embed (default: aol4foltr)",
+        choices=("aol", "amazon", "mind"),
+        default="aol",
+        help="Which dataset to embed (default: aol)",
     )
     parser.add_argument(
         "--amazon-category",
@@ -477,7 +477,7 @@ def main() -> None:
         "embedding_dim": embedder.embedding_dim,
         "batch_size": args.batch_size,
         "device": args.device,
-        "doc_dataset": args.doc_dataset if args.dataset == "aol4foltr" else None,
+        "doc_dataset": args.doc_dataset if args.dataset == "aol" else None,
         "amazon_doc_metadata_path": str(doc_metadata_path) if args.dataset == "amazon" else None,
         "mind_doc_metadata_path": str(doc_metadata_path) if args.dataset == "mind" else None,
         "limit_docs": args.limit_docs,

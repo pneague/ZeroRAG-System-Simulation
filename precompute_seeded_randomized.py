@@ -156,27 +156,27 @@ def main() -> None:
     )
     parser.add_argument(
         "--input",
-        default=str(Path("data") / "aol4foltr" / METADATA_FILENAME),
+        default=str(Path("data") / "aol" / METADATA_FILENAME),
         help="Path to source metadata CSV(.gz)",
     )
     parser.add_argument(
         "--seeded-peer-docs",
-        default=str(Path("data") / "aol4foltr" / "peer_future_doc_ids.json.gz"),
+        default=str(Path("data") / "aol" / "peer_future_doc_ids.json.gz"),
         help="Path to seeded peer-doc JSON(.gz)",
     )
     parser.add_argument(
         "--randomized-output",
-        default=str(Path("data") / "aol4foltr" / SEEDED_RANDOMIZED_METADATA_FILENAME),
+        default=str(Path("data") / "aol" / SEEDED_RANDOMIZED_METADATA_FILENAME),
         help="Path for randomized seeded metadata CSV(.gz)",
     )
     parser.add_argument(
         "--searchable-output",
-        default=str(Path("data") / "aol4foltr" / SEEDED_SEARCHABLE_QUERIES_FILENAME),
+        default=str(Path("data") / "aol" / SEEDED_SEARCHABLE_QUERIES_FILENAME),
         help="Path for seeded searchable sidecar CSV(.gz)",
     )
     parser.add_argument(
         "--summary-json",
-        default=str(Path("data") / "aol4foltr" / "metadata_seeded_randomized_summary.json"),
+        default=str(Path("data") / "aol" / "metadata_seeded_randomized_summary.json"),
         help="Optional summary JSON path",
     )
     parser.add_argument(

@@ -153,7 +153,7 @@ retrieval success.
 
 The simulator currently supports:
 
-- `aol4foltr`: chronological AOL query/click events.
+- `aol`: chronological AOL query/click events.
 - `amazon`: real user-item purchases/reviews + synthetic generated queries + UCSD
 metadata joined by `asin`. Amazon has no real timestamps, so only non-chronological
 scenarios are supported. On Amazon, `seeded_fixed_inventory` is canonicalized to
@@ -192,7 +192,7 @@ embedding manifest:
 
 ```bash
 python experiments/run_simulation.py \
-  --dataset aol4foltr \
+  --dataset aol \
   --scenario empty_start_chronological \
   --routing-mode semantic_query_memory \
   --topology-mode forming_new_connections \

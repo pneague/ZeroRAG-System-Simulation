@@ -62,7 +62,7 @@ class RunDiscoveryTests(unittest.TestCase):
             _write_manifest(
                 root / "seeded_randomized_timeline_forming_new_connections_run",
                 {
-                    "dataset": "aol4foltr",
+                    "dataset": "aol",
                     "scenario": "seeded_randomized_timeline",
                     "routing_mode": "semantic_query_memory",
                     "topology_mode": "forming_new_connections",
@@ -73,7 +73,7 @@ class RunDiscoveryTests(unittest.TestCase):
                 root / "lsh_seeded_randomized_run",
                 {
                     "algorithm": "e2lsh_dht",
-                    "dataset": "aol4foltr",
+                    "dataset": "aol",
                     "scenario": "seeded_randomized_timeline",
                     "summary": {"overall_recall": 0.5, "executed_queries": 2},
                 },
@@ -82,7 +82,7 @@ class RunDiscoveryTests(unittest.TestCase):
                 root / "semantica_aol_seeded_randomized_timeline_run",
                 {
                     "algorithm": "semantica_chain",
-                    "dataset": "aol4foltr",
+                    "dataset": "aol",
                     "scenario": "seeded_randomized_timeline",
                     "summary": {"overall_recall": 0.6, "executed_queries": 2},
                 },
@@ -90,7 +90,7 @@ class RunDiscoveryTests(unittest.TestCase):
             _write_manifest(
                 root / "seeded_randomized_timeline_random_walk_run",
                 {
-                    "dataset": "aol4foltr",
+                    "dataset": "aol",
                     "scenario": "seeded_randomized_timeline",
                     "selection_mode": "random_walk",
                     "summary": {"overall_recall": 0.3, "executed_queries": 2},

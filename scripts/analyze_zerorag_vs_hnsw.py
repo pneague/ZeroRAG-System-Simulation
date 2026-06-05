@@ -164,7 +164,7 @@ def _load_zerorag_runs(results_root: Path, *, include_smoke: bool) -> list[ZeroR
         if manifest.get("algorithm") in {"e2lsh_dht", "semantica"}:
             continue
 
-        dataset = str(manifest.get("dataset", "aol4foltr"))
+        dataset = str(manifest.get("dataset", "aol"))
         amazon_category = manifest.get("amazon_category")
         amazon_category = str(amazon_category) if amazon_category else None
         config = manifest.get("config") or {}
@@ -1038,7 +1038,7 @@ def parse_args() -> argparse.Namespace:
         "--datasets",
         nargs="*",
         default=None,
-        help="Optional dataset keys to include, e.g. aol4foltr amazon_electronics mind.",
+        help="Optional dataset keys to include, e.g. aol amazon_electronics mind.",
     )
     parser.add_argument(
         "--skip-hnsw",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download AOL4FOLTR assets from Zenodo.
+"""Download AOL assets from Zenodo.
 
 By default this downloads only ``metadata.csv`` because that is the file
 required for the semantic-DHT simulation pipeline. The large
@@ -13,7 +13,7 @@ from pathlib import Path
 
 
 DEFAULT_RECORD_ID = "15689455"
-DEFAULT_OUTPUT_DIR = Path("data") / "aol4foltr"
+DEFAULT_OUTPUT_DIR = Path("data") / "aol"
 CHUNK_SIZE = 1024 * 1024
 
 
@@ -51,7 +51,7 @@ def download_file(url: str, output_path: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Download AOL4FOLTR from Zenodo")
+    parser = argparse.ArgumentParser(description="Download AOL from Zenodo")
     parser.add_argument("--record-id", default=DEFAULT_RECORD_ID, help="Zenodo record id")
     parser.add_argument(
         "--output-dir",
@@ -87,7 +87,7 @@ def main() -> None:
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    print(f"Downloading AOL4FOLTR to {output_dir}")
+    print(f"Downloading AOL to {output_dir}")
     for filename in sorted(requested_files):
         download_file(available_files[filename], output_dir / filename)
 
