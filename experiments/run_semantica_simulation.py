@@ -323,6 +323,20 @@ def main() -> None:
     parser.add_argument("--metrics-window", type=int, default=1000)
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument(
+        "--semantica-peer-order-seed",
+        type=int,
+        default=(
+            int(os.environ["LOW_COORD_DHT_SEMANTICA_PEER_ORDER_SEED"])
+            if os.environ.get("LOW_COORD_DHT_SEMANTICA_PEER_ORDER_SEED")
+            else None
+        ),
+        help=(
+            "Optional seed for permuting peer rows before building the "
+            "Semantica trie. Omit to preserve historical ascending peer-id "
+            "order. This is independent of --random-seed."
+        ),
+    )
+    parser.add_argument(
         "--scenario",
         choices=tuple(sorted(ALLOWED_SCENARIOS)),
         default="seeded_randomized_timeline",
@@ -531,6 +545,7 @@ def main() -> None:
         strategy=args.semantica_strategy,
         metrics_window=args.metrics_window,
         random_seed=args.random_seed,
+        peer_order_seed=args.semantica_peer_order_seed,
         max_owned_docs=0,  # Seeded scenarios never evict; field kept for symmetry.
         retrieval_mode=retrieval_mode,
         relevant_doc_ids_by_qid=relevant_doc_ids_by_qid,
@@ -658,6 +673,9 @@ def main() -> None:
         "neighbor_rule": "closest_users_top_ncu_after_expansion",
         "paper_section": "VI.B chain-hop retrieval",
         "topology_seeded_from_peer_future_docs": topology_seeded_from_peer_future_docs,
+        "peer_order_seed": config.peer_order_seed,
+        "trie_input_order_sha256": network.trie_input_order_sha256,
+        "trie_input_peer_id_preview": network.trie_input_peer_id_preview,
         "trie_max_depth": network.trie.max_depth if network.trie is not None else 0,
         "trie_leaf_count": len(network.trie.leaves) if network.trie is not None else 0,
         "trie_clone_count": network.trie.clone_count if network.trie is not None else 0,
@@ -731,6 +749,8 @@ def main() -> None:
             "retrieval_mode": config.retrieval_mode,
             "metrics_window": config.metrics_window,
             "random_seed": config.random_seed,
+            "peer_order_seed": config.peer_order_seed,
+            "trie_input_order_sha256": network.trie_input_order_sha256,
             "max_owned_docs": config.max_owned_docs,
             "parallelism": driver.parallelism,
             "parallel_chunk_size": driver.chunk_size,

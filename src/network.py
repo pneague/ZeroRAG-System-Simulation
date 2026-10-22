@@ -11,14 +11,7 @@ import numpy as np
 
 from src.dataset import QueryEvent
 from src.metrics import MetricsTracker, QueryLog
-from src.peer import (
-    REFERRAL_TIE_TOLERANCE,
-    Peer,
-    PeerResponse,
-    Referral,
-    RoutedQuery,
-    VectorComparisonCounts,
-)
+from src.peer import Peer, PeerResponse, Referral, VectorComparisonCounts
 from src.routing import (
     SearchResult,
     run_best_first_multi_relevant_search,
@@ -529,7 +522,6 @@ class ZeroRAGNetwork:
         original_peer_id: int,
         comparison_counts: VectorComparisonCounts,
         relevant_doc_ids: frozenset[str] | None = None,
-        pending_routed_queries: list[tuple[int, RoutedQuery]] | None = None,
     ) -> PeerResponse:
         if peer_id not in self.active_peer_ids:
             return PeerResponse(
@@ -543,7 +535,7 @@ class ZeroRAGNetwork:
             query_embedding,
             comparison_counts=comparison_counts,
         )
-        computation = self.peers[peer_id].compute_query_response(
+        return self.peers[peer_id].respond_to_query(
             query_embedding=query_embedding,
             query_index=query_index,
             target_doc_id=target_doc_id,
@@ -556,23 +548,7 @@ class ZeroRAGNetwork:
             use_routed_query_memory=self.config.routing_mode == "semantic_query_memory",
             comparison_counts=comparison_counts,
             relevant_doc_ids=relevant_doc_ids,
-            referral_rng=self.rng,
         )
-        if computation.routed_query is not None:
-            if pending_routed_queries is None:
-                self.peers[peer_id].record_routed_query(computation.routed_query)
-            else:
-                pending_routed_queries.append((peer_id, computation.routed_query))
-        return computation.response
-
-    def _select_random_best_referral(self, unqueried: list[Referral]) -> Referral:
-        best_similarity = max(referral.similarity for referral in unqueried)
-        tied = [
-            referral
-            for referral in unqueried
-            if abs(referral.similarity - best_similarity) <= REFERRAL_TIE_TOLERANCE
-        ]
-        return tied[int(self.rng.integers(0, len(tied)))]
 
     def _run_random_user_probe(
         self,
@@ -720,7 +696,6 @@ class ZeroRAGNetwork:
         else:
             query_index = self.query_lookup.index_of(event.query_text)
             query_embedding = self.query_lookup.get_by_index(query_index)
-            pending_routed_queries: list[tuple[int, RoutedQuery]] = []
             query_peer = lambda peer_id: self._query_peer(
                 peer_id,
                 query_embedding=query_embedding,
@@ -729,7 +704,6 @@ class ZeroRAGNetwork:
                 original_peer_id=event.user_id,
                 comparison_counts=comparison_counts,
                 relevant_doc_ids=available_relevant_doc_ids if is_multi_relevant else None,
-                pending_routed_queries=pending_routed_queries,
             )
             if is_multi_relevant and self.config.search_mode == "fanout":
                 search_result = run_fanout_multi_relevant_search(
@@ -743,7 +717,6 @@ class ZeroRAGNetwork:
                     querier_peer_id=event.user_id,
                     max_cycles=self.config.max_cycles,
                     query_peer=query_peer,
-                    select_next=self._select_random_best_referral,
                 )
             elif self.config.search_mode == "fanout":
                 search_result = run_fanout_search(
@@ -759,11 +732,7 @@ class ZeroRAGNetwork:
                     target_doc_id=event.clicked_doc_id,
                     max_cycles=self.config.max_cycles,
                     query_peer=query_peer,
-                    select_next=self._select_random_best_referral,
                 )
-            if search_result.result_symbol == "+":
-                for peer_id, routed_query in pending_routed_queries:
-                    self.peers[peer_id].record_routed_query(routed_query)
         if self.config.profile_search:
             elapsed = time.perf_counter() - search_started_at
             self.search_profile["executed_queries"] += 1

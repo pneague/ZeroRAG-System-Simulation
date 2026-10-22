@@ -105,13 +105,13 @@ class FanoutSearchTests(unittest.TestCase):
         result = run_fanout_search(
             querier_peer_id=1,
             target_doc_id="target",
-            max_cycles=2,
+            max_cycles=1,
             fanout=2,
             query_peer=lambda peer_id: responses.get(peer_id, _response(peer_id)),
         )
 
         self.assertEqual(result.queried_peer_ids, [1, 2, 4])
-        self.assertEqual(result.cycles_used, 2)
+        self.assertEqual(result.cycles_used, 1)
         self.assertEqual(result.termination_reason, "cap")
         self.assertEqual(result.best_known_peer_id, 5)
 
@@ -131,7 +131,7 @@ class FanoutSearchTests(unittest.TestCase):
         )
 
         self.assertEqual(result.queried_peer_ids, [1, 2, 3])
-        self.assertEqual(result.cycles_used, 2)
+        self.assertEqual(result.cycles_used, 1)
         self.assertEqual(result.successful_peer_id, 2)
         self.assertEqual(result.termination_reason, "found")
 
@@ -152,7 +152,7 @@ class FanoutSearchTests(unittest.TestCase):
         )
 
         self.assertEqual(result.queried_peer_ids, [1, 2, 3, 4])
-        self.assertEqual(result.cycles_used, 3)
+        self.assertEqual(result.cycles_used, 2)
         self.assertEqual(result.result_symbol, "+")
         self.assertEqual(result.successful_peer_id, 4)
 
@@ -166,7 +166,7 @@ class FanoutSearchTests(unittest.TestCase):
         )
 
         self.assertEqual(result.queried_peer_ids, [1])
-        self.assertEqual(result.cycles_used, 1)
+        self.assertEqual(result.cycles_used, 0)
         self.assertEqual(result.termination_reason, "exhausted")
         self.assertIsNone(result.best_known_peer_id)
 

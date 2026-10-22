@@ -45,6 +45,7 @@ the inputs we feed it, with deterministic tie-breaking documented in
 
 from __future__ import annotations
 
+import hashlib
 import json
 import multiprocessing as mp
 from collections import defaultdict
@@ -102,6 +103,7 @@ class SemanticaSimulationConfig:
     strategy: str = DEFAULT_STRATEGY
     metrics_window: int = 1000
     random_seed: int = 42
+    peer_order_seed: int | None = None
     max_owned_docs: int = 0
     retrieval_mode: str = "single_target"
     relevant_doc_ids_by_qid: dict[int, frozenset[str]] = field(default_factory=dict)
@@ -606,6 +608,8 @@ class SemanticaNetwork:
         self._peer_index: dict[int, int] = {}
         self._peer_avg_emb: np.ndarray | None = None
         self._neighbors: dict[int, np.ndarray] = {}
+        self.trie_input_order_sha256: str | None = None
+        self.trie_input_peer_id_preview: list[int] = []
 
         self.coord = SemanticaCoordinationCounters()
 
@@ -783,6 +787,22 @@ class SemanticaNetwork:
         peer_ids_arr = np.asarray(peer_ids_with_docs, dtype=np.int64)
         peer_avg_emb = np.stack(avg_rows, axis=0).astype(np.float32)
 
+        # The historical implementation always passed peers to the trie in
+        # ascending peer-id order.  Replicated experiments can instead vary
+        # only this input order while leaving the trie/K-means RNG controlled
+        # independently by ``random_seed``.
+        if self.config.peer_order_seed is not None:
+            peer_order_rng = np.random.default_rng(self.config.peer_order_seed)
+            peer_order = peer_order_rng.permutation(peer_ids_arr.shape[0])
+            peer_ids_arr = peer_ids_arr[peer_order]
+            peer_avg_emb = peer_avg_emb[peer_order]
+
+        canonical_peer_ids = np.asarray(peer_ids_arr, dtype="<i8")
+        self.trie_input_order_sha256 = hashlib.sha256(
+            canonical_peer_ids.tobytes()
+        ).hexdigest()
+        self.trie_input_peer_id_preview = peer_ids_arr[:10].tolist()
+
         # Sanity assertion: rows must be approximately L2-normalized so
         # dot product = cosine. Crash early if upstream preprocessing
         # changes silently.
@@ -797,7 +817,9 @@ class SemanticaNetwork:
             f"[semantica_network.build_trie] building trie over "
             f"{peer_ids_arr.shape[0]:,} peers with seeded docs "
             f"(record_limit_per_leafnode={self.config.record_limit_per_leafnode}, "
-            f"delta={self.config.delta}, seed={self.config.random_seed})",
+            f"delta={self.config.delta}, seed={self.config.random_seed}, "
+            f"peer_order_seed={self.config.peer_order_seed}, "
+            f"peer_order_sha256={self.trie_input_order_sha256})",
             flush=True,
         )
         trie = SemanticaTrie.build(

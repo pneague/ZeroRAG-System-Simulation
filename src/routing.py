@@ -192,7 +192,7 @@ def run_fanout_search(
     queried_peer_ids: list[int] = []
     queried_set: set[int] = set()
     current_round_peer_ids = [querier_peer_id]
-    rounds_used = 0
+    rounds_used = -1
 
     while rounds_used < max_cycles and current_round_peer_ids:
         rounds_used += 1

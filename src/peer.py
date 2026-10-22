@@ -6,8 +6,6 @@ from typing import Callable
 
 import numpy as np
 
-REFERRAL_TIE_TOLERANCE = 1e-12
-
 
 @dataclass(slots=True)
 class DocumentCatalog:
@@ -127,26 +125,6 @@ class PeerQueryComputation:
     routed_query: RoutedQuery | None
 
 
-def _similarity_groups(referrals: list[Referral]) -> list[list[Referral]]:
-    groups: list[list[Referral]] = []
-    for referral in referrals:
-        if not groups or (
-            abs(groups[-1][0].similarity - referral.similarity) > REFERRAL_TIE_TOLERANCE
-        ):
-            groups.append([referral])
-            continue
-        groups[-1].append(referral)
-    return groups
-
-
-def _shuffled_group(
-    referrals: list[Referral],
-    rng: np.random.Generator,
-) -> list[Referral]:
-    order = rng.permutation(len(referrals))
-    return [referrals[int(index)] for index in order.tolist()]
-
-
 @dataclass(slots=True)
 class Peer:
     peer_id: int
@@ -248,7 +226,6 @@ class Peer:
         *,
         limit: int,
         exclude_peer_id: int | None = None,
-        rng: np.random.Generator | None = None,
     ) -> list[Referral]:
         best_by_peer: dict[int, Referral] = {}
         for referral in referrals:
@@ -257,24 +234,8 @@ class Peer:
             previous = best_by_peer.get(referral.peer_id)
             if previous is None or referral.similarity > previous.similarity:
                 best_by_peer[referral.peer_id] = referral
-        ranked = sorted(best_by_peer.values(), key=lambda item: (-item.similarity, item.peer_id))
-        selected: list[Referral] = []
-        for group in _similarity_groups(ranked):
-            remaining = limit - len(selected)
-            if remaining <= 0:
-                break
-            if len(group) <= remaining:
-                if rng is not None and len(group) > 1:
-                    group = _shuffled_group(group, rng)
-                selected.extend(group)
-                continue
-            if rng is None:
-                selected.extend(group[:remaining])
-            else:
-                indices = rng.choice(len(group), size=remaining, replace=False)
-                selected.extend(group[int(index)] for index in indices.tolist())
-            break
-        return selected
+        ranked = sorted(best_by_peer.values(), key=lambda item: item.similarity, reverse=True)
+        return ranked[:limit]
 
     def respond_to_query(
         self,
@@ -291,7 +252,6 @@ class Peer:
         use_routed_query_memory: bool = True,
         comparison_counts: VectorComparisonCounts | None = None,
         relevant_doc_ids: frozenset[str] | set[str] | None = None,
-        referral_rng: np.random.Generator | None = None,
     ) -> PeerResponse:
         computation = self.compute_query_response(
             query_embedding=query_embedding,
@@ -306,7 +266,6 @@ class Peer:
             use_routed_query_memory=use_routed_query_memory,
             comparison_counts=comparison_counts,
             relevant_doc_ids=relevant_doc_ids,
-            referral_rng=referral_rng,
         )
         if computation.routed_query is not None:
             self.record_routed_query(computation.routed_query)
@@ -327,7 +286,6 @@ class Peer:
         use_routed_query_memory: bool = True,
         comparison_counts: VectorComparisonCounts | None = None,
         relevant_doc_ids: frozenset[str] | set[str] | None = None,
-        referral_rng: np.random.Generator | None = None,
     ) -> PeerQueryComputation:
         if allow_local_hit and comparison_counts is not None:
             comparison_counts.local_doc_vector_comparisons += self.owned_doc_catalog.size
@@ -338,9 +296,8 @@ class Peer:
                 sorted(doc_id for doc_id in relevant_doc_ids if doc_id in self.owned_docs)
             )
         replica_referrals = replica_referrals or []
-        effective_use_routed_query_memory = use_routed_query_memory and self.max_routed_queries > 0
         routed_referrals: list[Referral] = []
-        if effective_use_routed_query_memory:
+        if use_routed_query_memory:
             routed_referrals = self._best_routed_query_referrals(
                 query_embedding,
                 similarity_threshold=similarity_threshold,
@@ -351,11 +308,10 @@ class Peer:
             replica_referrals + routed_referrals,
             limit=referral_limit,
             exclude_peer_id=original_peer_id,
-            rng=referral_rng,
         )
         suggested_peer_id = referrals[0].peer_id if referrals else None
         routed_query = None
-        if effective_use_routed_query_memory:
+        if use_routed_query_memory:
             routed_query = RoutedQuery(
                 query_index=query_index,
                 original_peer_id=original_peer_id,
@@ -374,9 +330,7 @@ class Peer:
         )
 
     def record_routed_query(self, routed_query: RoutedQuery) -> None:
-        if self.max_routed_queries <= 0:
-            return
         self.routed_queries.append(routed_query)
-        if len(self.routed_queries) > self.max_routed_queries:
+        if self.max_routed_queries > 0 and len(self.routed_queries) > self.max_routed_queries:
             self.routed_queries = self.routed_queries[-self.max_routed_queries :]
 
